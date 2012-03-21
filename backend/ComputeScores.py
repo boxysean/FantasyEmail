@@ -3,6 +3,11 @@ import yaml
 import sys
 import sqlite3
 from datetime import datetime
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-i", "--ignore", action="store_true", default=False)
+(options, args) = parser.parse_args()
 
 config = yaml.load(file("config.yaml"))
 
@@ -18,8 +23,8 @@ c.close()
 ### fetch emails ###
 
 c = conn.cursor()
-c.execute("select timestamp, awardTo, category, points, subject from email_points order by timestamp")
-emails = [{"timestamp": row[0], "awardTo": row[1], "category": row[2], "points": row[3], "subject": row[4]} for row in c]
+c.execute("select timestamp, awardTo, category, points, subject, mailfrom from email_points order by timestamp")
+emails = [{"timestamp": row[0], "awardTo": row[1], "category": row[2], "points": row[3], "subject": row[4], "from": row[5]} for row in c]
 c.close()
 
 ### construct email to emailer_id map ###
@@ -43,60 +48,47 @@ c.execute("select id from interface_category where total == 1 limit 1")
 for row in c: category_total_id = row[0]
 c.close()
 
-### calculate points for each team ###
-
-startDate = "2012-03-20 15:00:00"
+### fetch team transactions ###
 
 for team in teams:
-	### fetch team transactions ###
-
 	c = conn.cursor()
 	c.execute("select timestamp, emailer_id, points from interface_playertransaction where team_id = ? order by timestamp", (team["id"],))
-	transactions = [{"timestamp": row[0], "emailer_id": row[1], "points": row[2]} for row in c]
+	team["transactions"] = [{"timestamp": row[0], "emailer_id": row[1], "points": row[2]} for row in c]
 	c.close()
 
 	team["score"] = {}
 	team["points"] = {}
 	team["totalScore"] = 0
 	team["totalPoints"] = 0
+	team["tidx"] = 0
+	team["roster"] = {}
 
-	roster = {}
+### calculate points for each team ###
 
-	tidx = 0
+startDate = "2012-03-20 15:00:00"
 
-	print team["name"]
-	print transactions
+for email in emails:
+	if startDate > email["timestamp"]:
+		continue
 
-	### go through emails and construct the score ###
+	print "[%s] %20s: %s" % (email["timestamp"], email["from"][0:20], email["subject"])
 
-	for email in emails:
-		if startDate > email["timestamp"]:
-			continue
-
-#		datetime.strptime(transactions[tidx]["timestamp"][:-7], "%Y-%m-%d %H:%M:%S")
-#		print datetime.strptime(email["timestamp"], "%Y-%m-%d %H:%M:%S")
-
-#		print email["timestamp"]
-
-		while tidx < len(transactions) and transactions[tidx]["timestamp"][:-7] < email["timestamp"]:
-#			print transactions[tidx]["timestamp"][:-7], "- transaction! set player", id_to_email_dict[transactions[tidx]["emailer_id"]], "to", transactions[tidx]["points"]
-#			print transactions[tidx]["timestamp"][:-7], "<", email["timestamp"], transactions[tidx]["timestamp"][:-7] < email["timestamp"]
-			roster[transactions[tidx]["emailer_id"]] = transactions[tidx]["points"]
-			tidx = tidx+1
+	for team in teams:
+		transactions = team["transactions"]
+		while team["tidx"] < len(transactions) and transactions[team["tidx"]]["timestamp"][:-7] < email["timestamp"]:
+			team["roster"][transactions[team["tidx"]]["emailer_id"]] = transactions[team["tidx"]]["points"]
+			team["tidx"] = team["tidx"]+1
 
 		category = email["category"]
 
-		if roster.has_key(email["awardTo"]):
-			points = roster[email["awardTo"]] * email["points"]
+		if team["roster"].has_key(email["awardTo"]):
+			points = team["roster"][email["awardTo"]] * email["points"]
 			if team["points"].has_key(category):
 				team["points"][category] = team["points"][category] + points
 			else:
 				team["points"][category] = points
-			print email["timestamp"], "- point!", email["subject"], "awarded to", id_to_email_dict[email["awardTo"]], "category", category_id_to_name[email["category"]]
+			print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team["name"][0:20], id_to_email_dict[email["awardTo"]][0:20], category_id_to_name[email["category"]][0:20])
 			team["totalPoints"] = team["totalPoints"] + points
-
-	for id in team["points"].keys():
-		print category_id_to_name[id], team["points"][id]
 
 ### calculate score for each team ###
 
@@ -127,10 +119,16 @@ s = sorted(teams, key=lambda team: team["user"])
 s = sorted(s, key=lambda team: team["totalPoints"], reverse=True)
 s = sorted(s, key=lambda team: team["totalScore"], reverse=True)
 
-for team in s:
-	print team
+print "%20s %8s %8s %8s %8s %8s %8s" % ("", category_id_to_name[2][0:8], category_id_to_name[3][0:8], category_id_to_name[4][0:8], category_id_to_name[5][0:8], category_id_to_name[6][0:8], "Total")
+
+for ss in s:
+	print "%20s %8s %8s %8s %8s %8s %8s" % (ss["name"], ss["score"][2], ss["score"][3], ss["score"][4], ss["score"][5], ss["score"][6], ss["totalScore"])
 
 ### put them in the database ###
+
+if options.ignore:
+	print "WARNING: not inserted into database"
+	sys.exit(0)
 
 c = conn.cursor()
 
