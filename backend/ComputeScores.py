@@ -2,6 +2,7 @@ import re
 import yaml
 import sys
 import sqlite3
+from datetime import datetime
 
 config = yaml.load(file("config.yaml"))
 
@@ -17,8 +18,8 @@ c.close()
 ### fetch emails ###
 
 c = conn.cursor()
-c.execute("select timestamp, awardTo, category, points from email_points order by timestamp")
-emails = [{"timestamp": row[0], "awardTo": row[1], "category": row[2], "points": row[3]} for row in c]
+c.execute("select timestamp, awardTo, category, points, subject from email_points order by timestamp")
+emails = [{"timestamp": row[0], "awardTo": row[1], "category": row[2], "points": row[3], "subject": row[4]} for row in c]
 c.close()
 
 ### construct email to emailer_id map ###
@@ -26,7 +27,10 @@ c.close()
 c = conn.cursor()
 c.execute("select emailAddress, emailer_id from interface_emailaddress")
 email_to_id_dict = {}
-for row in c: email_to_id_dict[row[0]] = row[1]
+id_to_email_dict = {}
+for row in c:
+	email_to_id_dict[row[0]] = row[1]
+	id_to_email_dict[row[1]] = row[0]
 c.close()
 
 ### construct category to id map ###
@@ -69,7 +73,14 @@ for team in teams:
 		if startDate > email["timestamp"]:
 			continue
 
-		while tidx < len(transactions) and transactions[tidx]["timestamp"] >= email["timestamp"]:
+#		datetime.strptime(transactions[tidx]["timestamp"][:-7], "%Y-%m-%d %H:%M:%S")
+#		print datetime.strptime(email["timestamp"], "%Y-%m-%d %H:%M:%S")
+
+#		print email["timestamp"]
+
+		while tidx < len(transactions) and transactions[tidx]["timestamp"][:-7] < email["timestamp"]:
+#			print transactions[tidx]["timestamp"][:-7], "- transaction! set player", id_to_email_dict[transactions[tidx]["emailer_id"]], "to", transactions[tidx]["points"]
+#			print transactions[tidx]["timestamp"][:-7], "<", email["timestamp"], transactions[tidx]["timestamp"][:-7] < email["timestamp"]
 			roster[transactions[tidx]["emailer_id"]] = transactions[tidx]["points"]
 			tidx = tidx+1
 
@@ -81,6 +92,7 @@ for team in teams:
 				team["points"][category] = team["points"][category] + points
 			else:
 				team["points"][category] = points
+			print email["timestamp"], "- point!", email["subject"], "awarded to", id_to_email_dict[email["awardTo"]], "category", category_id_to_name[email["category"]]
 			team["totalPoints"] = team["totalPoints"] + points
 
 	for id in team["points"].keys():
