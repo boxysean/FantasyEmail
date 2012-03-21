@@ -175,12 +175,12 @@ for mb in mbs:
 		t = datetime.strptime(datestr[:-6], "%a, %d %b %Y %H:%M:%S")
 
 		tzsgn = 1 if datestr[-5:-4] == '+' else -1
-		tzh = int(datestr[-4:-2])-5 # 5 is offset for EST
+		tzh = int(datestr[-4:-2])-4 # 5 is offset for EST
 		tzm = int(datestr[-2:])
 
 		tzdelta = timedelta(hours=tzh, minutes=tzm)
 		t = t - (tzsgn * tzdelta)
-#		print datestr, t.strftime("%H:%M:%S")
+		print datestr, t.strftime("%H:%M:%S")
 
 		msgTime = int(t.strftime("%s"))
 
