@@ -7,6 +7,7 @@ from optparse import OptionParser
 
 parser = OptionParser()
 parser.add_option("-i", "--ignore", action="store_true", default=False)
+parser.add_option("-f", "--follow", type="string", dest="follow_team_name", default=None)
 (options, args) = parser.parse_args()
 
 config = yaml.load(file("config.yaml"))
@@ -76,6 +77,8 @@ for email in emails:
 	for team in teams:
 		transactions = team["transactions"]
 		while team["tidx"] < len(transactions) and transactions[team["tidx"]]["timestamp"][:-7] < email["timestamp"]:
+			if team["name"] == options.follow_team_name:
+				print "                                TT [team %20s] [emailer %20s] [points %d]" % (team["name"][0:20], id_to_email_dict[transactions[team["tidx"]]["emailer_id"]][0:20], transactions[team["tidx"]]["points"])
 			team["roster"][transactions[team["tidx"]]["emailer_id"]] = transactions[team["tidx"]]["points"]
 			team["tidx"] = team["tidx"]+1
 
@@ -87,7 +90,8 @@ for email in emails:
 				team["points"][category] = team["points"][category] + points
 			else:
 				team["points"][category] = points
-			print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team["name"][0:20], id_to_email_dict[email["awardTo"]][0:20], category_id_to_name[email["category"]][0:20])
+			if team["name"] == options.follow_team_name and points > 0:
+				print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team["name"][0:20], id_to_email_dict[email["awardTo"]][0:20], category_id_to_name[email["category"]][0:20])
 			team["totalPoints"] = team["totalPoints"] + points
 
 ### calculate score for each team ###
