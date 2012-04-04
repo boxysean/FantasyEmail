@@ -1,3 +1,5 @@
 db
 *.pyc
 mbox-itp
+local_settings.py
+wsgi_handler.py

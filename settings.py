@@ -161,3 +161,10 @@ LOGGING = {
         },
     }
 }
+
+# Try to load local settings that override the global settings
+
+try:
+	from local_settings import *
+except ImportError:
+	pass
