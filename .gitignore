@@ -3,3 +3,4 @@ db
 mbox-itp
 local_settings.py
 wsgi_handler.py
+config.yaml
