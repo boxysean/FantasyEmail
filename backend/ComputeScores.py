@@ -67,9 +67,10 @@ for team in teams:
 ### calculate points for each team ###
 
 startDate = "2012-03-20 15:00:00"
+endDate = "2012-03-23 15:30:00"
 
 for email in emails:
-	if startDate > email["timestamp"]:
+	if startDate > email["timestamp"] or email["timestamp"] > endDate:
 		continue
 
 	print "[%s] %20s: %s" % (email["timestamp"], email["from"][0:20], email["subject"])
