@@ -1,14 +1,11 @@
-import mailbox
-import mimetypes
-import email
 import re
 import yaml
 from datetime import timedelta, datetime
-import time
-import sys
 import sqlite3
 
+#!!! apparently this is not the right way to import
 from Categories import *
+from Mail import *
 
 ### configs ###
 
@@ -28,7 +25,7 @@ def checkEmail(mail):
 	for categoryInst in categoriesInst:
 		categoryInst.check(mail)
 
-### mailboxes ###
+### set up mailboxes ###
 
 mconfig = config["mail"]
 mbFiles = mconfig["mailbox_file"]
@@ -36,13 +33,12 @@ mbFiles = mconfig["mailbox_file"]
 if type(mbFiles) != list:
 	mbFiles = [mbFiles]
 
-mbs = []
+mailboxes = Mailboxes()
 
 for mbFile in mbFiles:
-	mb = mailbox.UnixMailbox(file(mbFile, "r"), email.message_from_file)
-	mbs.append(mb)
+	mailboxes.add(UnixMailbox(mbFile, re.compile(mconfig["list_address"])))
 
-### database ###
+### database store of points ###
 
 c = conn.cursor()
 
@@ -82,102 +78,21 @@ c.close()
 
 ### read mails ###
 
-checked = {}
+lastDay = ""
 
-class Mail:
-	replyFwdProg = re.compile("^\\s*(re|fwd)\\S*\\s*(.*)$", flags=re.IGNORECASE)
-	emailProg = re.compile("[\w\-\.]+@\w[\w\-]+\.+[\w\-]+", flags=re.IGNORECASE)
+for mail in mailboxes.getMail():
+	date = datetime.fromtimestamp(mail.timestamp)
+	dateDay = date.strftime("%d/%m/%Y")
 
-	def __init__(self, msg):
-		self.msg = msg
-		self.subject = msg["subject"]
-		self.initDate()
+	if not lastDay:
+		lastDay = dateDay
+	if lastDay != dateDay:
+		lastDay = dateDay
+		print dateDay
 
+	print mail
 
-		self.toAddr = self.emailProg.search(msg["to"]).group(0)
-		self.fromAddr = self.emailProg.search(msg["from"]).group(0)
-
-		self.hasGif = None
-		self.lines = None
-
-	def initDate(self):
-		timetuple = email.utils.parsedate_tz(self.msg["date"])
-		self.timestamp = time.mktime(timetuple[0:9]) - timetuple[9]
-		date = datetime.fromtimestamp(self.timestamp)
-		self.datestr = date.strftime("%d/%m/%y %H:%M:%S")
-#		print "subject %s timestamp %s date %s tz %d" % (self.subject, self.timestamp, self.msg["date"], timetuple[9])
-
-	def getLines(self):
-		if self.lines is None:
-			self.lines = []
-			for part in self.msg.walk():
-				if part.get_content_type().lower() == "text/plain" and len(self.lines) == 0:
-					payload = part.get_payload().splitlines()
-					for line in payload:
-						if re.search("^\\s*>", line):
-							break
-						else:
-							self.lines.append(line)
-		return self.lines
-
-	def searchBody(self, p):
-		return p.search(" ".join(self.getLines()))
-
-	def hasAttachedGif(self):
-		if self.hasGif is None:
-			self.hasGif = False
-			for part in self.msg.walk():
-				if part.get_content_type().lower() == "image/gif":
-					self.hasGif = True
-					break
-
-		return self.hasGif
-
-	def getOriginalSubject(self):
-		res = self.replyFwdProg.match(self.subject)
-		if res:
-			return res.group(2)
-		else:
-			return self.subject
-
-	def isReplyFwd(self):
-		return self.replyFwdProg.search(self.subject)
-
-for mb in mbs:
-	lastDay = ""
-
-	for msg in mb:
-		toMatches = re.search(mconfig["list_address"], msg["to"])
-
-		if not toMatches:
-			msg = mb.next()
-			continue
-
-		mail = Mail(msg)
-
-		### remove duplicate messages, which happen in my mailbox :( ###
-
-		key = (mail.subject, mail.fromAddr, mail.timestamp)
-
-		if checked.has_key(key):
-			msg = mb.next()
-			del checked[key]
-			continue
-		else:
-			checked[key] = 1
-
-		date = datetime.fromtimestamp(mail.timestamp)
-		dateDay = date.strftime("%d/%m/%Y")
-
-		if not lastDay:
-			lastDay = dateDay
-		if lastDay != dateDay:
-			lastDay = dateDay
-			print dateDay
-
-		print "%30s / %20s / %30s" % (mail.fromAddr[0:30], mail.subject[0:20], mail.datestr[0:30])
-
-		checkEmail(mail)
+	checkEmail(mail)
 
 conn.close()
 
