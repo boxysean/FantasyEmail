@@ -1,6 +1,6 @@
 import re
 import yaml
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 import sqlite3
 
 #!!! apparently this is not the right way to import
@@ -9,9 +9,11 @@ from Mail import *
 
 ### configs ###
 
-config = yaml.load(file("config.yaml"))
+config = yaml.load(file("game.yaml"))
 
-conn = sqlite3.connect(config["sqlite_db"])
+print "Checking mail for %s" % (config["name"])
+
+conn = sqlite3.connect(config["db"])
 
 ### functions to award email points ###
 
@@ -27,16 +29,13 @@ def checkEmail(mail):
 
 ### set up mailboxes ###
 
-mconfig = config["mail"]
-mbFiles = mconfig["mailbox_file"]
-
-if type(mbFiles) != list:
-	mbFiles = [mbFiles]
-
 mailboxes = Mailboxes()
 
-for mbFile in mbFiles:
-	mailboxes.add(UnixMailbox(mbFile, re.compile(mconfig["list_address"])))
+for mailboxDef in config["mailboxes"]:
+	if mailboxDef["type"] == "UnixMailbox":
+		mbFile = mailboxDef["file"]
+		mbListAddress = mailboxDef["listAddress"]
+		mailboxes.add(UnixMailbox(mbFile, re.compile(mbListAddress)))
 
 ### database store of points ###
 
@@ -78,20 +77,7 @@ c.close()
 
 ### read mails ###
 
-lastDay = ""
-
 for mail in mailboxes.getMail():
-	date = datetime.fromtimestamp(mail.timestamp)
-	dateDay = date.strftime("%d/%m/%Y")
-
-	if not lastDay:
-		lastDay = dateDay
-	if lastDay != dateDay:
-		lastDay = dateDay
-		print dateDay
-
-	print mail
-
 	checkEmail(mail)
 
 conn.close()

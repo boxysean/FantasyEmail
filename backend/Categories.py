@@ -23,12 +23,12 @@ class Category:
 		if not len(awardTo):
 			awardTo = mail.fromAddr
 		c = self.dbc.cursor()
-		c.execute("select emailer_id from interface_emailaddress where emailAddress = ?", (awardTo,))
+		c.execute("select emailer_id from interface_emailaddress where realEmail = ?", (awardTo,))
 		awardToId = -1
 		for res in c:
 			awardToId = res[0]
 
-		if awardToId:
+		if awardToId >= 0:
 			c.execute("insert into email_points (timestamp, mailfrom, subject, category, points, awardto) values (?, ?, ?, ?, ?, ?)", (mail.timestamp, mail.fromAddr, mail.subject, category.catId, points, awardToId))
 			self.dbc.commit()
 		else:
