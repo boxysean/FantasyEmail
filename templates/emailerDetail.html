@@ -3,9 +3,9 @@
   <h1> {{object}} </h1>
   <br>
   <h3> Emailer Stats Since March 1 </h3> 
-  {% for epoints in object.emailerpoints_set.all%}
+  {% for epoints in object.emailerstats_set.all%}
  
-  <li> {{epoints.category}}: {{epoints.points}} <i> points</i></li> 
+  <li> {{epoints.category}}: {{epoints.stat}} <i> points</i></li> 
   
   {%endfor %}
   

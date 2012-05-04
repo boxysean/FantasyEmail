@@ -91,21 +91,21 @@ for mb in mbs:
 						break
 
 					if emailer_id >= 0:
-						c.execute("insert into interface_emailaddress (emailer_id, emailAddress, realEmail) values (?, ?, ?)", (emailer_id, nameRes.group(2).lower(), nameRes.group(2).lower()))
+						c.execute("insert into interface_emailaddress (emailer_id, emailAddress) values (?, ?)", (emailer_id, nameRes.group(2).lower()))
 					else:
-						c.execute("insert into interface_emailer (name, netId, image) values (?, ?, ?)", (name, "abc123", "default.jpg"))
+						c.execute("insert into interface_emailer (name, image) values (?, ?)", (name, "default.jpg"))
 						c.execute("select id from interface_emailer where name = ?", (name,))
 						for row in c:
 							emailer_id = row[0]
 							break
 
-						c.execute("insert into interface_emailaddress (emailer_id, emailAddress, realEmail) values (?, ?, ?)", (emailer_id, nameRes.group(2).lower(), nameRes.group(2).lower()))
+						c.execute("insert into interface_emailaddress (emailer_id, emailAddress) values (?, ?)", (emailer_id, nameRes.group(2).lower()))
 					add = False
 
 			if add:
 				needToAddNames.append(msg["from"])
 				print "adding", msg["from"]
-				c.execute("insert into interface_emailaddress (emailer_id, emailAddress, realEmail) values (-1, ?, ?)", (msg["from"], ""))
+				c.execute("insert into interface_emailaddress (emailer_id, emailAddress) values (-1, ?)", (msg["from"]))
 
 conn.commit()
 c.close()

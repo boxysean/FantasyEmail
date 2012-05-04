@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     url(r'^$', 'interface.views.home', name='home'),
     url(r'^team/(?P<pk>[a-z\d]+)/$', teamDetail, name='teamDetail'),
     url(r'^emailers/$', emailerList, name='emailerList'),
+    url(r'^emails/$', 'interface.views.emailList', name='emailList'),
     url(r'^teams/$', 'interface.views.teamList', name='teamList'),
     url(r'^emailer/(?P<pk>[a-z\d]+)/$', emailerDetail, name='emailerDetail'),
 

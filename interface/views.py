@@ -16,9 +16,14 @@ from datetime import datetime
 import settings
 from models import *
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 
 def home(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and len(Team.objects.filter(user=request.user)):
         return HttpResponseRedirect('/edit')
     return render_to_response("home.html", locals() , context_instance=RequestContext(request))
 
@@ -59,8 +64,8 @@ def addPlayer(request, id):
             message="You can't play for your own team. That'd be too damn easy" 
             return render_to_response("error.html",locals() , context_instance=RequestContext(request))
 
-        new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = emailer_to_add, points=1 ) # points should be what ??! 
-        new_player = Player.objects.create(team=team, emailer=emailer_to_add, points= 1) # Points should be 0 when they're first added no matter what, right?
+        new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = emailer_to_add, add=True ) # points should be what ??! 
+        new_player = Player.objects.create(team=team, emailer=emailer_to_add) # Points should be 0 when they're first added no matter what, right?
         return HttpResponseRedirect('/edit')
     else:
         headline= "Error!"
@@ -73,7 +78,7 @@ def removePlayer(request, id):
         team = get_object_or_404(Team, user=request.user)
         team_players = get_list_or_404(Player, team=team )
         player_to_remove = get_object_or_404(Player, id=id)
-        new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = player_to_remove.emailer, points=0 ) # Points should be 0 here? 
+        new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = player_to_remove.emailer, add=False ) # Points should be 0 here? 
         if player_to_remove in team_players:
             player_to_remove.delete()
             return HttpResponseRedirect('/edit')
@@ -85,7 +90,20 @@ def removePlayer(request, id):
         return HttpResponse('error yo')
 
 def teamList(request):
-    object_list = sorted(Team.objects.all(), key= lambda a: a.getTotalScore())
-    # sorted(Author.objects.all(), key=lambda a: a.full_name)
+    team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
+    categories = sorted(Category.objects.all(), key=lambda a: a.name)
+    for team in team_list:
+        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+        team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 
-    return render_to_response("teamList.html",locals() , context_instance=RequestContext(request))
+    return render_to_response("teamList.html", locals(), context_instance=RequestContext(request))
+
+def emailList(request):
+    email_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
+    categories = sorted(Category.objects.all(), key=lambda a: a.name)
+    for team in team_list:
+        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+        team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+
+    return render_to_response("teamList.html", locals(), context_instance=RequestContext(request))
+

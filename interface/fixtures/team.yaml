@@ -1,0 +1,68 @@
+- model: interface.Team
+  pk: 1
+  fields:
+    name: "Sean's team"
+    user: 1
+
+- model: interface.Team
+  pk: 2
+  fields:
+    name: "Zach's team"
+    user: 2
+
+- model: interface.Player
+  pk: 1
+  fields:
+    team: 1
+    emailer: 1
+
+- model: interface.Player
+  pk: 2
+  fields:
+    team: 2
+    emailer: 2
+
+- model: interface.Player
+  pk: 3
+  fields:
+    team: 1
+    emailer: 3
+
+- model: interface.Player
+  pk: 4
+  fields:
+    team: 2
+    emailer: 5
+
+- model: interface.PlayerTransaction
+  pk: 1
+  fields:
+    timestamp: "2012-05-01 00:00:00"
+    team: 1
+    emailer: 1
+    add: True
+
+- model: interface.PlayerTransaction
+  pk: 2
+  fields:
+    timestamp: "2012-05-01 00:00:00"
+    team: 2
+    emailer: 2
+    add: True
+
+- model: interface.PlayerTransaction
+  pk: 3
+  fields:
+    timestamp: "2012-05-01 00:00:00"
+    team: 1
+    emailer: 3
+    add: True
+
+- model: interface.PlayerTransaction
+  pk: 4
+  fields:
+    timestamp: "2012-05-01 00:00:00"
+    team: 2
+    emailer: 5
+    add: True
+

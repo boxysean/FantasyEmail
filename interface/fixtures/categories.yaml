@@ -1,0 +1,24 @@
+- model: interface.category
+  pk: 1
+  fields:
+    name: Last Reply
+    description: ""
+
+- model: interface.category
+  pk: 2
+  fields:
+    name: One Word
+    description: ""
+
+- model: interface.category
+  pk: 3
+  fields:
+    name: Conversation Starter
+    description: ""
+
+- model: interface.category
+  pk: 4
+  fields:
+    name: Late Night
+    description: ""
+

@@ -2,9 +2,9 @@ import models
 from django.contrib import admin
 
 class EmailerAdmin(admin.ModelAdmin):
-	list_display = ("name", "netId", "user")
-	list_display_links = ("name", "netId", "user")
-	ordering = ("name", "netId", "user")
+	list_display = ("name", "user")
+	list_display_links = ("name", "user")
+	ordering = ("name", "user")
 
 admin.site.register(models.Emailer, EmailerAdmin)
 
@@ -38,7 +38,7 @@ admin.site.register(models.Team, TeamAdmin)
 
 
 class PlayerAdmin(admin.ModelAdmin):
-	list_display = ("emailer", "team", "points")
+	list_display = ("emailer", "team")
 	list_filter = ("team",)
 	ordering = ("team", "emailer")
 	search = ("team", "emailer")
@@ -48,7 +48,7 @@ admin.site.register(models.Player, PlayerAdmin)
 
 
 class PlayerTransactionAdmin(admin.ModelAdmin):
-	list_display = ("emailer", "team", "timestamp", "points")
+	list_display = ("emailer", "team", "timestamp", "add")
 	list_filter = ("team",)
 	ordering = ("-timestamp",)
 	search = ("team", "emailer")
@@ -58,19 +58,19 @@ admin.site.register(models.PlayerTransaction, PlayerTransactionAdmin)
 
 
 class CategoryAdmin(admin.ModelAdmin):
-	list_display = ("name", "total")
+	list_display = ("name",)
 
 admin.site.register(models.Category, CategoryAdmin)
 
 
 
-class EmailerPointsAdmin(admin.ModelAdmin):
-	list_display = ("emailer", "category", "points")
+class EmailerStatsAdmin(admin.ModelAdmin):
+	list_display = ("emailer", "category", "stat")
 	list_filter = ("emailer", "category")
 	ordering = ("emailer", "category")
 	search = ("emailer", "category")
 
-admin.site.register(models.EmailerPoints, EmailerPointsAdmin)
+admin.site.register(models.EmailerStats, EmailerStatsAdmin)
 
 
 
@@ -84,11 +84,11 @@ admin.site.register(models.TeamPoints, TeamPointsAdmin)
 
 
 
-class TeamScoreAdmin(admin.ModelAdmin):
-	list_display = ("team", "category", "score")
+class TeamStatsAdmin(admin.ModelAdmin):
+	list_display = ("team", "category", "stat")
 	list_filter = ("team", "category")
 	ordering = ("team", "category")
 	search = ("team", "category")
 
-admin.site.register(models.TeamScore, TeamScoreAdmin)
+admin.site.register(models.TeamStats, TeamStatsAdmin)
 

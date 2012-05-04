@@ -9,76 +9,102 @@ from Mail import *
 
 ### configs ###
 
-config = yaml.load(file("game.yaml"))
+class AwardPoints:
+	def checkEmail(self, mail, conn):
+		mail.insert(conn, "emails")
+		for categoryInst in self.categoriesInst:
+			res = categoryInst.check(mail)
+#			print "%s: %s" % (categoryInst.catName, res)
 
-print "Checking mail for %s" % (config["name"])
+	def __init__(self, conn):
+		self.conn = conn
 
-conn = sqlite3.connect(config["db"])
+		config = yaml.load(file("game.yaml"))
+		
+		print "Checking mail for %s" % (config["name"])
+		
+		### functions to award email points ###
 
-### functions to award email points ###
+		categories = [ConversationStarterCategory, LateNightCategory, LastReplyCategory, OneWordCategory]
+		self.categoriesInst = []
 
-categories = [FreeFoodCategory, ThankYouCategory, GIFCategory, PraiseTheCreatorsCategory, ConversationStarterCategory]
-categoriesInst = []
+		for category in categories:
+			self.categoriesInst.append(category(conn))
 
-for category in categories:
-	categoriesInst.append(category(conn))
+		### database store of points ###
 
-def checkEmail(mail):
-	for categoryInst in categoriesInst:
-		categoryInst.check(mail)
+		c = conn.cursor()
 
-### set up mailboxes ###
-
-mailboxes = Mailboxes()
-
-for mailboxDef in config["mailboxes"]:
-	if mailboxDef["type"] == "UnixMailbox":
-		mbFile = mailboxDef["file"]
-		mbListAddress = mailboxDef["listAddress"]
-		mailboxes.add(UnixMailbox(mbFile, re.compile(mbListAddress)))
-
-### database store of points ###
-
-c = conn.cursor()
-
-c.execute("drop table if exists email_points")
-c.execute("drop index if exists email_points_master")
-
-c.execute("""
-    create table if not exists email_points (
+		c.execute("""create table if not exists email_points (
         id int primary key,
         timestamp datetime not null, 
         mailfrom char(128) not null,
         subject char(128) not null,
+        sanitizedSubject char(128) not null,
         category int not null,
         points int not null,
         awardTo int not null references "interface_emailer" ("id")
-    )
-""")
+    )""")
 
-c.execute("create index if not exists email_points_awardTo on email_points (awardTo)")
-c.execute("create unique index if not exists email_points_master on email_points (timestamp, mailfrom, subject, category)")
+		c.execute("create index if not exists email_points_awardTo on email_points (awardTo)")
+		c.execute("create unique index if not exists email_points_master on email_points (timestamp, mailfrom, subject, category)")
 
-c.execute("drop table if exists conversation")
-c.execute("drop index if exists conversation_subject")
-
-c.execute("""
-    create table if not exists conversation (
+		c.execute("""create table if not exists conversation (
         timestamp datetime not null,
         mailfrom char(128) not null,
         subject char(128) not null
-    )
-""")
+    )""")
 
-c.execute("create index if not exists conversation_subject on conversation (subject, timestamp)")
+		c.execute("create index if not exists conversation_subject on conversation (subject, timestamp)")
 
-conn.commit()
-c.close()
+		c.execute("""create table if not exists emails (
+        timestamp datetime not null,
+        mailfrom char(128) not null,
+        subject char(128) not null,
+        sanitizedSubject char(128) not null
+    )""")
 
-### read mails ###
+		c.execute("create index if not exists emails_timestamp on emails (timestamp)")
 
-for mail in mailboxes.getMail():
-	checkEmail(mail)
+		conn.commit()
+		c.close()
 
-conn.close()
+if __name__ == "__main__":
+	### set up mailboxes ###
+
+	mailboxes = Mailboxes()
+
+	config = yaml.load(file("game.yaml"))
+
+	for mailboxDef in config["mailboxes"]:
+		if mailboxDef["type"] == "UnixMailbox":
+			mbFile = mailboxDef["file"]
+			mbListAddress = mailboxDef["listAddress"]
+			mailboxes.add(UnixMailbox(mbFile, re.compile(mbListAddress)))
+
+	### read mails ###
+
+	conn = sqlite3.connect(config["db"])
+
+	c = conn.cursor()
+
+	c.execute("drop table if exists email_points")
+	c.execute("drop index if exists email_points_master")
+
+	c.execute("drop table if exists conversation")
+	c.execute("drop index if exists conversation_subject")
+
+	c.execute("drop table if exists emails")
+	c.execute("drop index if exists emails_timestamp")
+
+	conn.commit()
+	c.close()
+
+	ap = AwardPoints(conn)
+
+	for mail in mailboxes.getMail():
+#		print mail.subject
+		ap.checkEmail(mail, conn)
+
+	conn.close()
 

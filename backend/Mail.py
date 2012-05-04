@@ -43,15 +43,7 @@ class UnixMailbox(Mailbox):
 
 			mail = Mail(msg)
 
-			### my mailing list sends me duplicate messages :( ###
-
-			key = (mail.subject, mail.fromAddr, mail.timestamp)
-
-			if key in checked:
-				checked.remove(key)
-			else:
-				checked.add(key)
-				self.msgs.append(mail)
+			self.msgs.append(mail)
 
 	def __repr__(self):
 		return "Unix Mailbox (%s)" % (self.mbFile)
@@ -94,7 +86,11 @@ class Mail:
 					payload = part.get_payload().splitlines()
 					for line in payload:
 						if re.search("^\\s*>", line):
+							continue
+						elif re.search("_______________________________________________", line):
 							break
+						elif re.search("^On .* wrote:$", line):
+							continue
 						else:
 							self.lines.append(line)
 		return self.lines
@@ -119,6 +115,9 @@ class Mail:
 		else:
 			return self.subject
 
+	def getSanitizedSubject(self):
+		return self.getOriginalSubject().lower().strip()
+
 	def isReplyFwd(self):
 		return self.replyFwdProg.search(self.subject)
 
@@ -133,4 +132,10 @@ class Mail:
 
 	def __eq__(self, o):
 		return self.subject == o.subject and self.fromAddr == o.fromAddr and self.timestamp == o.timestamp
+
+	def insert(self, conn, tablename):
+		c = conn.cursor()
+		c.execute("insert into %s (timestamp, mailfrom, subject, sanitizedSubject) values  (?, ?, ?, ?)" % tablename, (self.timestamp, self.fromAddr, self.subject, self.getSanitizedSubject()))
+		conn.commit()
+		c.close()
 

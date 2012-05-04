@@ -1,27 +1,60 @@
 {% extends 'base.html' %}
 {%block content %}
-  <h1> Your Rival Teams </h1>
+  <h1>Overview</h1>
   <table class="table table-striped">
     <thead>
+      <th>Rank</th>
       <th>Team</th>
-      <th> Gifs </th>
-      <th> Free Food </th>
-      <th> Convo Starter </th>
-      <th> Praise Creators </th>
-      <th> Thankyou</th>
-      <th class="strong"> Total Score</th>
-
+      <th>Points</th>
+      <th>Points Back</th>
     </thead>
-  {% for team in object_list %}
+  {% for team in team_list %}
   <tr>
+    <td>{{ forloop.counter }}</td>
     <td><a href="/team/{{team.id}}">{{team.name}}</a></td>
-    {# <td> {{team.getTotalScore}}<td> #}
-    {% for tscore in team.teamscore_set.all %}
-     {% if forloop.last %}
-      <td class="strong"> {{tscore.score}}</td>
-     {% else%}
-      <td> {{tscore.score}}</td>
-     {% endif%}
+    <td>{{team.getTotalPoints}}</td>
+    <td>{{team.getPointsBack}}</td>
+  </tr>
+  {%endfor%}
+  </table>
+
+  <h1>Overall Points</h1>
+  <table class="table table-striped">
+    <thead>
+      <th>Rank</th>
+      <th>Team</th>
+      {% for category in categories %}
+        <th>{{ category.name }}</td>
+      {% endfor %}
+      <th class="strong">Total</th>
+    </thead>
+  {% for team in team_list %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><a href="/team/{{team.id}}">{{team.name}}</a></td>
+    {% for tscore in team.teampoints_list %}
+      <td> {{tscore.points}}</td>
+    {% endfor%}
+    <td class="strong"> {{team.getTotalPoints}}</td>
+  </tr>
+  {%endfor%}
+  </table>
+
+  <h1>Overall Stats</h1>
+  <table class="table table-striped">
+    <thead>
+      <th>Rank</th>
+      <th>Team</th>
+      {% for category in categories %}
+        <th>{{ category.name }}</td>
+      {% endfor %}
+    </thead>
+  {% for team in team_list %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td><a href="/team/{{team.id}}">{{team.name}}</a></td>
+    {% for tscore in team.teamstats_list %}
+      <td> {{tscore.stat}}</td>
     {% endfor%}
   </tr>
   {%endfor%}

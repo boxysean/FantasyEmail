@@ -4,15 +4,16 @@ import sys
 import sqlite3
 from datetime import datetime
 from optparse import OptionParser
+import time
 
 parser = OptionParser()
 parser.add_option("-i", "--ignore", action="store_true", default=False)
 parser.add_option("-f", "--follow", type="string", dest="follow_team_name", default=None)
 (options, args) = parser.parse_args()
 
-config = yaml.load(file("config.yaml"))
+config = yaml.load(file("game.yaml"))
 
-conn = sqlite3.connect(config["sqlite_db"])
+conn = sqlite3.connect(config["db"])
 
 ### fetch teams ###
 
@@ -42,32 +43,31 @@ c.close()
 ### construct category to id map ###
 
 c = conn.cursor()
-c.execute("select id, name from interface_category where total != 1")
+c.execute("select id, name from interface_category")
 category_id_to_name = {}
 for row in c: category_id_to_name[row[0]] = row[1]
-c.execute("select id from interface_category where total == 1 limit 1")
-for row in c: category_total_id = row[0]
 c.close()
 
 ### fetch team transactions ###
 
 for team in teams:
 	c = conn.cursor()
-	c.execute("select timestamp, emailer_id, points from interface_playertransaction where team_id = ? order by timestamp", (team["id"],))
-	team["transactions"] = [{"timestamp": row[0], "emailer_id": row[1], "points": row[2]} for row in c]
+	c.execute("select timestamp, emailer_id, `add` from interface_playertransaction where team_id = ? order by timestamp", (team["id"],))
+	team["transactions"] = [{"timestamp": row[0], "emailer_id": row[1], "add": row[2]} for row in c]
 	c.close()
 
-	team["score"] = {}
+	team["stats"] = {}
 	team["points"] = {}
-	team["totalScore"] = 0
 	team["totalPoints"] = 0
 	team["tidx"] = 0
 	team["roster"] = {}
+	team["rank"] = {}
+	team["done"] = {}
 
 ### calculate points for each team ###
 
-startDate = "2012-03-20 15:00:00"
-endDate = "2012-03-23 15:30:00"
+startDate = time.mktime(config["startDate"].timetuple())
+endDate = time.mktime(config["endDate"].timetuple())
 
 for email in emails:
 	if startDate > email["timestamp"] or email["timestamp"] > endDate:
@@ -77,57 +77,96 @@ for email in emails:
 
 	for team in teams:
 		transactions = team["transactions"]
-		while team["tidx"] < len(transactions) and transactions[team["tidx"]]["timestamp"][:-7] < email["timestamp"]:
-			if team["name"] == options.follow_team_name:
-				print "                                TT [team %20s] [emailer %20s] [points %d]" % (team["name"][0:20], id_to_email_dict[transactions[team["tidx"]]["emailer_id"]][0:20], transactions[team["tidx"]]["points"])
-			team["roster"][transactions[team["tidx"]]["emailer_id"]] = transactions[team["tidx"]]["points"]
-			team["tidx"] = team["tidx"]+1
+		if team["tidx"] < len(transactions):
+			transaction_dt = datetime.strptime(transactions[team["tidx"]]["timestamp"], "%Y-%m-%d %H:%M:%S")
+			transaction_time = time.mktime(transaction_dt.timetuple())
+			while team["tidx"] < len(transactions) and transaction_time < email["timestamp"]:
+				if team["name"] == options.follow_team_name:
+					print "                                TT [team %20s] [emailer %20s] [add %s]" % (team["name"][0:20], id_to_email_dict[transactions[team["tidx"]]["emailer_id"]][0:20], transactions[team["tidx"]]["add"])
+				team["roster"][transactions[team["tidx"]]["emailer_id"]] = transactions[team["tidx"]]["add"]
+				team["tidx"] = team["tidx"]+1
 
 		category = email["category"]
 
-		if team["roster"].has_key(email["awardTo"]):
-			points = team["roster"][email["awardTo"]] * email["points"]
-			if team["points"].has_key(category):
-				team["points"][category] = team["points"][category] + points
+		if team["roster"].has_key(email["awardTo"]) and team["roster"][email["awardTo"]]:
+			points = email["points"]
+			if team["stats"].has_key(category):
+				team["stats"][category] = team["stats"][category] + points
 			else:
-				team["points"][category] = points
+				team["stats"][category] = points
 			if team["name"] == options.follow_team_name and points > 0:
 				print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team["name"][0:20], id_to_email_dict[email["awardTo"]][0:20], category_id_to_name[email["category"]][0:20])
-			team["totalPoints"] = team["totalPoints"] + points
 
-### calculate score for each team ###
+### calculate points for each team ###
 
 for category_id in category_id_to_name.keys():
 	for team in teams:
 		if not team["points"].has_key(category_id):
 			team["points"][category_id] = 0
+		if not team["stats"].has_key(category_id):
+			team["stats"][category_id] = 0
 
-	s = sorted(teams, key=lambda team: team["points"][category_id], reverse=True)
-	lastScore = -1
-	lastPoints = -1
-	for i, team in enumerate(s):
-		j = len(teams)-i
-		if team["points"][category_id] == 0:
-			team["score"][category_id] = 0
-		elif team["points"][category_id] == lastPoints:
-			team["score"][category_id] = lastScore
-			team["totalScore"] = team["totalScore"] + lastScore
-		else:
-			team["score"][category_id] = j
-			team["totalScore"] = team["totalScore"] + j
-			lastPoints = team["points"][category_id]
-			lastScore = j
+	s = sorted(teams, key=lambda team: team["stats"][category_id], reverse=False)
 
+	for i, team in reversed(list(enumerate(s))):
+		team["rank"][category_id] = i+1
+
+	### O(n^2) is easiest! ###
+
+	for i in range(len(s)):
+		if s[i]["done"].has_key(category_id):
+			continue
+
+		avg = s[i]["rank"][category_id]
+		count = 1.0
+
+		for j in range(i+1, len(s)):
+			if s[i]["stats"][category_id] == s[j]["stats"][category_id]:
+				avg = avg + s[j]["rank"][category_id]
+				count = count + 1
+
+		for j in range(i, len(s)):
+			if s[i]["stats"][category_id] == s[j]["stats"][category_id]:
+				s[j]["points"][category_id] = avg / count
+				s[j]["done"][category_id] = True
+
+for team in teams:
+	team["totalPoints"] = sum(team["points"][x] for x in team["points"].keys())
+	
 ### find the winner!!! ###
 
 s = sorted(teams, key=lambda team: team["user"])
 s = sorted(s, key=lambda team: team["totalPoints"], reverse=True)
-s = sorted(s, key=lambda team: team["totalScore"], reverse=True)
 
-print "%20s %8s %8s %8s %8s %8s %8s" % ("", category_id_to_name[2][0:8], category_id_to_name[3][0:8], category_id_to_name[4][0:8], category_id_to_name[5][0:8], category_id_to_name[6][0:8], "Total")
+### print the stats ###
+
+sys.stdout.write("%20s " % "")
+
+for i in category_id_to_name.keys():
+	sys.stdout.write("%8s " % category_id_to_name[i][0:8])
+
+sys.stdout.write("\n")
 
 for ss in s:
-	print "%20s %8s %8s %8s %8s %8s %8s" % (ss["name"], ss["score"][2], ss["score"][3], ss["score"][4], ss["score"][5], ss["score"][6], ss["totalScore"])
+	sys.stdout.write("%20s " % ss["name"])
+	for i in category_id_to_name.keys():
+		sys.stdout.write("%8d " % (ss["stats"][i] if ss["stats"].has_key(i) else 0))
+	sys.stdout.write("\n")
+
+### print the points ###
+
+sys.stdout.write("%20s " % "")
+
+for i in category_id_to_name.keys():
+	sys.stdout.write("%8s " % category_id_to_name[i][0:8])
+
+sys.stdout.write("%8s\n" % "Total")
+
+for ss in s:
+	sys.stdout.write("%20s " % ss["name"])
+	for i in category_id_to_name.keys():
+		sys.stdout.write("%8.1f " % (ss["points"][i] if ss["points"].has_key(i) else 0))
+	sys.stdout.write("%8.1f \n" % (ss["totalPoints"]))
 
 ### put them in the database ###
 
@@ -138,15 +177,12 @@ if options.ignore:
 c = conn.cursor()
 
 c.execute("delete from interface_teampoints")
-c.execute("delete from interface_teamscore")
+c.execute("delete from interface_teamstats")
 
 for team in s:
 	for category_id in category_id_to_name.keys():
 		c.execute("insert into interface_teampoints (team_id, category_id, points, total) values (?, ?, ?, ?)", (team["id"], category_id, team["points"][category_id], 0))
-		c.execute("insert into interface_teamscore (team_id, category_id, score, total) values (?, ?, ?, ?)", (team["id"], category_id, team["score"][category_id], 0))
-
-	c.execute("insert into interface_teampoints (team_id, category_id, points, total) values (?, ?, ?, ?)", (team["id"], category_total_id, team["totalPoints"], 1))
-	c.execute("insert into interface_teamscore (team_id, category_id, score, total) values (?, ?, ?, ?)", (team["id"], category_total_id, team["totalScore"], 1))
+		c.execute("insert into interface_teamstats (team_id, category_id, stat, total) values (?, ?, ?, ?)", (team["id"], category_id, team["stats"][category_id], 0))
 
 conn.commit()
 c.close()
