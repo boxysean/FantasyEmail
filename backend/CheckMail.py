@@ -7,11 +7,32 @@ import sqlite3
 from Categories import *
 from Mail import *
 
+import os
+
+sys.path = sys.path + ["/Users/boxysean/Documents/workspace/riskyListy"]
+
+from django.conf import settings
+
+try:
+	settings.configure(
+	    DATABASE_ENGINE = 'django.db.backends.sqlite3',
+	    DATABASE_NAME = os.path.join("..", 'db'),
+	    DATABASE_USER = '',
+	    DATABASE_PASSWORD = '',
+	    DATABASE_HOST = '',
+	    DATABASE_PORT = '',
+	    TIME_ZONE = 'America/New_York',
+	)
+except:
+	pass
+
+from interface.models import *
+
 ### configs ###
 
 class AwardPoints:
 	def checkEmail(self, mail, conn):
-		mail.insert(conn, "emails")
+		mail.insert()
 		for categoryInst in self.categoriesInst:
 			res = categoryInst.check(mail)
 #			print "%s: %s" % (categoryInst.catName, res)
@@ -35,20 +56,6 @@ class AwardPoints:
 
 		c = conn.cursor()
 
-		c.execute("""create table if not exists email_points (
-        id int primary key,
-        timestamp datetime not null, 
-        mailfrom char(128) not null,
-        subject char(128) not null,
-        sanitizedSubject char(128) not null,
-        category int not null,
-        points int not null,
-        awardTo int not null references "interface_emailer" ("id")
-    )""")
-
-		c.execute("create index if not exists email_points_awardTo on email_points (awardTo)")
-		c.execute("create unique index if not exists email_points_master on email_points (timestamp, mailfrom, subject, category)")
-
 		c.execute("""create table if not exists conversation (
         timestamp datetime not null,
         mailfrom char(128) not null,
@@ -56,15 +63,6 @@ class AwardPoints:
     )""")
 
 		c.execute("create index if not exists conversation_subject on conversation (subject, timestamp)")
-
-		c.execute("""create table if not exists emails (
-        timestamp datetime not null,
-        mailfrom char(128) not null,
-        subject char(128) not null,
-        sanitizedSubject char(128) not null
-    )""")
-
-		c.execute("create index if not exists emails_timestamp on emails (timestamp)")
 
 		conn.commit()
 		c.close()
@@ -88,14 +86,11 @@ if __name__ == "__main__":
 
 	c = conn.cursor()
 
-	c.execute("drop table if exists email_points")
-	c.execute("drop index if exists email_points_master")
-
 	c.execute("drop table if exists conversation")
 	c.execute("drop index if exists conversation_subject")
 
-	c.execute("drop table if exists emails")
-	c.execute("drop index if exists emails_timestamp")
+	c.execute("delete from interface_emailpoint")
+	c.execute("delete from interface_email")
 
 	conn.commit()
 	c.close()

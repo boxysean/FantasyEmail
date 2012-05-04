@@ -92,3 +92,18 @@ class TeamStatsAdmin(admin.ModelAdmin):
 
 admin.site.register(models.TeamStats, TeamStatsAdmin)
 
+class EmailAdmin(admin.ModelAdmin):
+	list_display = ("timestamp", "emailer", "subject")
+
+admin.site.register(models.Email, EmailAdmin)
+
+
+class EmailPointAdmin(admin.ModelAdmin):
+	list_display = ("email", "category", "awardTo", "points")
+	list_filter = ("category",)
+
+admin.site.register(models.EmailPoint, EmailPointAdmin)
+
+
+
+

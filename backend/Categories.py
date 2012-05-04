@@ -2,6 +2,31 @@ import re
 import sqlite3
 from datetime import datetime
 
+import os
+import sys
+
+sys.path = sys.path + ["/Users/boxysean/Documents/workspace/riskyListy"]
+
+from django.conf import settings
+
+try:
+	settings.configure(
+	    DATABASE_ENGINE = 'django.db.backends.sqlite3',
+	    DATABASE_NAME = os.path.join("..", 'db'),
+	    DATABASE_USER = '',
+	    DATABASE_PASSWORD = '',
+	    DATABASE_HOST = '',
+	    DATABASE_PORT = '',
+#	    TIME_ZONE = 'America/New_York',
+	)
+except RuntimeError:
+	pass
+
+
+
+from interface.models import Category as CategoryModel, EmailAddress, EmailPoint, Email
+
+
 class Category:
 	idMap = {}
 
@@ -23,19 +48,13 @@ class Category:
 	def award(self, mail, category, points, awardTo=""):
 		if not len(awardTo):
 			awardTo = mail.fromAddr
-		c = self.dbc.cursor()
-		c.execute("select emailer_id from interface_emailaddress where emailAddress = ?", (awardTo,))
-		awardToId = -1
-		for res in c:
-			awardToId = res[0]
 
-		if awardToId >= 0:
-			c.execute("insert into email_points (timestamp, mailfrom, subject, sanitizedSubject, category, points, awardto) values (?, ?, ?, ?, ?, ?, ?)", (mail.timestamp, mail.fromAddr, mail.subject, mail.getSanitizedSubject(), category.catId, points, awardToId))
-			self.dbc.commit()
-		else:
-			print "### WARNING: Could not find entry for email address %s ###" % awardTo
-		c.close()
-	
+		email = Email.objects.filter(pk=mail.pk)[0]
+		dbCategory = CategoryModel.objects.filter(name=category.catName)[0]
+		emailAddress = EmailAddress.objects.filter(emailAddress=awardTo)[0]
+
+		emailPoint = EmailPoint(email=email, category=dbCategory, awardTo=emailAddress.emailer, points=points)
+		emailPoint.save()
 
 class ThankYouCategory(Category):
 	catName = "Thank You"
@@ -114,9 +133,13 @@ class LastReplyCategory(Category):
 	def check(self, mail):
 		if mail.isReplyFwd():
 			sanitizedSubject = mail.getSanitizedSubject()
-			# remove existing point awarded for last word
-			c = self.dbc.cursor()
-			c.execute("delete from email_points where sanitizedSubject = ? and category = ?", (sanitizedSubject, Category.idMap[self.catName]))
+
+			# remove existing points awarded for last word in this thread
+			dbCategory = CategoryModel.objects.filter(name=self.catName)[0]
+			emails = Email.objects.filter(sanitizedSubject=sanitizedSubject)
+			for email in emails:
+				emailPoint = EmailPoint.objects.filter(email=email, category=dbCategory)
+				emailPoint.delete()
 
 			# award this email for the last word
 			self.award(mail, self, 1)

@@ -4,6 +4,29 @@ import re
 from datetime import datetime
 import time
 
+import os
+import sys
+
+sys.path = sys.path + ["/Users/boxysean/Documents/workspace/riskyListy"]
+
+from django.conf import settings
+
+try:
+	settings.configure(
+	    DATABASE_ENGINE = 'django.db.backends.sqlite3',
+	    DATABASE_NAME = os.path.join("..", 'db'),
+	    DATABASE_USER = '',
+	    DATABASE_PASSWORD = '',
+	    DATABASE_HOST = '',
+	    DATABASE_PORT = '',
+	    TIME_ZONE = 'America/New_York',
+	)
+except:
+	pass
+
+from interface.models import Emailer, EmailAddress, Email
+
+
 ### mailboxes ###
 
 class Mailboxes:
@@ -75,7 +98,7 @@ class Mail:
 		timetuple = email.utils.parsedate_tz(self.msg["date"])
 		self.timestamp = time.mktime(timetuple[0:9]) - timetuple[9]
 		date = datetime.fromtimestamp(self.timestamp)
-		self.datestr = date.strftime("%d/%m/%y %H:%M:%S")
+		self.datestr = date.strftime("%Y-%m-%d %H:%M:%S")
 #		print "subject %s timestamp %s date %s tz %d" % (self.subject, self.timestamp, self.msg["date"], timetuple[9])
 
 	def getLines(self):
@@ -133,9 +156,14 @@ class Mail:
 	def __eq__(self, o):
 		return self.subject == o.subject and self.fromAddr == o.fromAddr and self.timestamp == o.timestamp
 
-	def insert(self, conn, tablename):
-		c = conn.cursor()
-		c.execute("insert into %s (timestamp, mailfrom, subject, sanitizedSubject) values  (?, ?, ?, ?)" % tablename, (self.timestamp, self.fromAddr, self.subject, self.getSanitizedSubject()))
-		conn.commit()
-		c.close()
+	def insert(self):
+		emailAddress = EmailAddress.objects.filter(emailAddress=self.fromAddr)[0]
+		email = Email(timestamp=self.datestr, emailer=emailAddress.emailer, subject=self.subject, sanitizedSubject=self.getSanitizedSubject())
+		email.save()
+		self.pk = email.pk
+
+#		c = conn.cursor()
+#		c.execute("insert into %s (timestamp, mailfrom, subject, sanitizedSubject) values  (?, ?, ?, ?)" % tablename, (self.timestamp, self.fromAddr, self.subject, self.getSanitizedSubject()))
+#		conn.commit()
+#		c.close()
 

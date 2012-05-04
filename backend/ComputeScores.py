@@ -5,6 +5,23 @@ import sqlite3
 from datetime import datetime
 from optparse import OptionParser
 import time
+import os
+
+sys.path = sys.path + ["/Users/boxysean/Documents/workspace/riskyListy"]
+
+from django.conf import settings
+settings.configure(
+    DATABASE_ENGINE = 'django.db.backends.sqlite3',
+    DATABASE_NAME = os.path.join("..", 'db'),
+    DATABASE_USER = '',
+    DATABASE_PASSWORD = '',
+    DATABASE_HOST = '',
+    DATABASE_PORT = '',
+    TIME_ZONE = 'America/New_York',
+)
+
+
+from interface.models import *
 
 parser = OptionParser()
 parser.add_option("-i", "--ignore", action="store_true", default=False)
@@ -15,158 +32,122 @@ config = yaml.load(file("game.yaml"))
 
 conn = sqlite3.connect(config["db"])
 
-### fetch teams ###
-
-c = conn.cursor()
-c.execute("select t.id, t.name, u.username from interface_team t inner join auth_user u on (t.user_id = u.id)")
-teams = [{"id": row[0], "name": row[1], "user": row[2]} for row in c]
-c.close()
-
-### fetch emails ###
-
-c = conn.cursor()
-c.execute("select timestamp, awardTo, category, points, subject, mailfrom from email_points order by timestamp")
-emails = [{"timestamp": row[0], "awardTo": row[1], "category": row[2], "points": row[3], "subject": row[4], "from": row[5]} for row in c]
-c.close()
-
-### construct email to emailer_id map ###
-
-c = conn.cursor()
-c.execute("select emailAddress, emailer_id from interface_emailaddress")
-email_to_id_dict = {}
-id_to_email_dict = {}
-for row in c:
-	email_to_id_dict[row[0]] = row[1]
-	id_to_email_dict[row[1]] = row[0]
-c.close()
-
-### construct category to id map ###
-
-c = conn.cursor()
-c.execute("select id, name from interface_category")
-category_id_to_name = {}
-for row in c: category_id_to_name[row[0]] = row[1]
-c.close()
-
 ### fetch team transactions ###
 
-for team in teams:
-	c = conn.cursor()
-	c.execute("select timestamp, emailer_id, `add` from interface_playertransaction where team_id = ? order by timestamp", (team["id"],))
-	team["transactions"] = [{"timestamp": row[0], "emailer_id": row[1], "add": row[2]} for row in c]
-	c.close()
+teams = list(Team.objects.all())
 
-	team["stats"] = {}
-	team["points"] = {}
-	team["totalPoints"] = 0
-	team["tidx"] = 0
-	team["roster"] = {}
-	team["rank"] = {}
-	team["done"] = {}
+for team in teams:
+	team.stats = {}
+	team.points = {}
+	team.totalPoints = 0
+	team.tidx = 0
+	team.roster = {}
+	team.rank = {}
+	team.done = {}
+	team.transactions = list(team.playertransaction_set.all())
 
 ### calculate points for each team ###
 
-startDate = time.mktime(config["startDate"].timetuple())
-endDate = time.mktime(config["endDate"].timetuple())
+startDate = config["startDate"]
+endDate = config["endDate"]
 
-for email in emails:
-	if startDate > email["timestamp"] or email["timestamp"] > endDate:
+for emailPoint in EmailPoint.objects.all():
+	email = emailPoint.email
+
+	if startDate > email.timestamp or email.timestamp > endDate:
 		continue
 
-	print "[%s] %20s: %s" % (email["timestamp"], email["from"][0:20], email["subject"])
+	print "[%s] %20s: %s" % (email.timestamp, email.emailer, email.subject)
 
 	for team in teams:
-		transactions = team["transactions"]
-		if team["tidx"] < len(transactions):
-			transaction_dt = datetime.strptime(transactions[team["tidx"]]["timestamp"], "%Y-%m-%d %H:%M:%S")
-			transaction_time = time.mktime(transaction_dt.timetuple())
-			while team["tidx"] < len(transactions) and transaction_time < email["timestamp"]:
-				if team["name"] == options.follow_team_name:
-					print "                                TT [team %20s] [emailer %20s] [add %s]" % (team["name"][0:20], id_to_email_dict[transactions[team["tidx"]]["emailer_id"]][0:20], transactions[team["tidx"]]["add"])
-				team["roster"][transactions[team["tidx"]]["emailer_id"]] = transactions[team["tidx"]]["add"]
-				team["tidx"] = team["tidx"]+1
+		while team.tidx < len(team.transactions) and team.transactions[team.tidx].timestamp < email.timestamp:
+			transaction = team.transactions[team.tidx]
+			if team.name == options.follow_team_name:
+				print "                                TT [team %20s] [emailer %20s] [add %s]" % (team.name[0:20], transaction.emailer.name[0:20], transaction.add)
+			team.roster[transaction.emailer] = transaction.add
+			team.tidx = team.tidx+1
 
-		category = email["category"]
+		category = emailPoint.category
 
-		if team["roster"].has_key(email["awardTo"]) and team["roster"][email["awardTo"]]:
-			points = email["points"]
-			if team["stats"].has_key(category):
-				team["stats"][category] = team["stats"][category] + points
+		if team.roster.has_key(emailPoint.awardTo) and team.roster[emailPoint.awardTo]:
+			points = emailPoint.points
+			if team.stats.has_key(category):
+				team.stats[category] = team.stats[category] + points
 			else:
-				team["stats"][category] = points
-			if team["name"] == options.follow_team_name and points > 0:
-				print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team["name"][0:20], id_to_email_dict[email["awardTo"]][0:20], category_id_to_name[email["category"]][0:20])
+				team.stats[category] = points
+			if team.name == options.follow_team_name and points > 0:
+				print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team.name[0:20], emailPoint.awardTo.name[0:20], emailPoint.category.name[0:20])
 
 ### calculate points for each team ###
 
-for category_id in category_id_to_name.keys():
+for category in Category.objects.all():
 	for team in teams:
-		if not team["points"].has_key(category_id):
-			team["points"][category_id] = 0
-		if not team["stats"].has_key(category_id):
-			team["stats"][category_id] = 0
+		if not team.points.has_key(category):
+			team.points[category] = 0
+		if not team.stats.has_key(category):
+			team.stats[category] = 0
 
-	s = sorted(teams, key=lambda team: team["stats"][category_id], reverse=False)
+	s = sorted(teams, key=lambda team: team.stats[category], reverse=False)
 
 	for i, team in reversed(list(enumerate(s))):
-		team["rank"][category_id] = i+1
+		team.rank[category] = i+1
 
 	### O(n^2) is easiest! ###
 
 	for i in range(len(s)):
-		if s[i]["done"].has_key(category_id):
+		if s[i].done.has_key(category):
 			continue
 
-		avg = s[i]["rank"][category_id]
+		avg = s[i].rank[category]
 		count = 1.0
 
 		for j in range(i+1, len(s)):
-			if s[i]["stats"][category_id] == s[j]["stats"][category_id]:
-				avg = avg + s[j]["rank"][category_id]
+			if s[i].stats[category] == s[j].stats[category]:
+				avg = avg + s[j].rank[category]
 				count = count + 1
 
 		for j in range(i, len(s)):
-			if s[i]["stats"][category_id] == s[j]["stats"][category_id]:
-				s[j]["points"][category_id] = avg / count
-				s[j]["done"][category_id] = True
+			if s[i].stats[category] == s[j].stats[category]:
+				s[j].points[category] = avg / count
+				s[j].done[category] = True
 
 for team in teams:
-	team["totalPoints"] = sum(team["points"][x] for x in team["points"].keys())
+	team.totalPoints = sum(team.points[x] for x in team.points.keys())
 	
 ### find the winner!!! ###
 
-s = sorted(teams, key=lambda team: team["user"])
-s = sorted(s, key=lambda team: team["totalPoints"], reverse=True)
+s = sorted(teams, key=lambda team: team.name)
+s = sorted(s, key=lambda team: team.totalPoints, reverse=True)
 
 ### print the stats ###
 
 sys.stdout.write("%20s " % "")
 
-for i in category_id_to_name.keys():
-	sys.stdout.write("%8s " % category_id_to_name[i][0:8])
+for category in Category.objects.all():
+	sys.stdout.write("%8s " % category.name[0:8])
 
 sys.stdout.write("\n")
 
 for ss in s:
-	sys.stdout.write("%20s " % ss["name"])
-	for i in category_id_to_name.keys():
-		sys.stdout.write("%8d " % (ss["stats"][i] if ss["stats"].has_key(i) else 0))
+	sys.stdout.write("%20s " % ss.name)
+	for category in Category.objects.all():
+		sys.stdout.write("%8d " % (ss.stats[category] if ss.stats.has_key(category) else 0))
 	sys.stdout.write("\n")
 
 ### print the points ###
 
 sys.stdout.write("%20s " % "")
 
-for i in category_id_to_name.keys():
-	sys.stdout.write("%8s " % category_id_to_name[i][0:8])
+for category in Category.objects.all():
+	sys.stdout.write("%8s " % category.name[0:8])
 
 sys.stdout.write("%8s\n" % "Total")
 
 for ss in s:
-	sys.stdout.write("%20s " % ss["name"])
-	for i in category_id_to_name.keys():
-		sys.stdout.write("%8.1f " % (ss["points"][i] if ss["points"].has_key(i) else 0))
-	sys.stdout.write("%8.1f \n" % (ss["totalPoints"]))
+	sys.stdout.write("%20s " % ss.name)
+	for category in Category.objects.all():
+		sys.stdout.write("%8.1f " % (ss.points[category] if ss.points.has_key(category) else 0))
+	sys.stdout.write("%8.1f \n" % (ss.totalPoints))
 
 ### put them in the database ###
 
@@ -179,11 +160,11 @@ c = conn.cursor()
 c.execute("delete from interface_teampoints")
 c.execute("delete from interface_teamstats")
 
-for team in s:
-	for category_id in category_id_to_name.keys():
-		c.execute("insert into interface_teampoints (team_id, category_id, points, total) values (?, ?, ?, ?)", (team["id"], category_id, team["points"][category_id], 0))
-		c.execute("insert into interface_teamstats (team_id, category_id, stat, total) values (?, ?, ?, ?)", (team["id"], category_id, team["stats"][category_id], 0))
-
 conn.commit()
 c.close()
+
+for team in s:
+	for category in Category.objects.all():
+		TeamPoints(team=team, category=category, points=team.points[category], total=0).save()
+		TeamStats(team=team, category=category, stat=team.stats[category], total=0).save()
 

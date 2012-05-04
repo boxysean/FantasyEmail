@@ -84,6 +84,7 @@ class Email(models.Model):
 	emailer = models.ForeignKey(Emailer)
 	subject = models.CharField(max_length=256)
 	sanitizedSubject = models.CharField(max_length=256)
+	def __str__(self): return "[%s] %s: %s" % (self.timestamp, self.emailer, self.subject)
 
 class EmailPoint(models.Model):
 	email = models.ForeignKey(Email)

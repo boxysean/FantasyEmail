@@ -2,7 +2,25 @@
 
 {% block content %}
   <h1>Email List</h1>
+  <table>
+  <tr>
+    <th>When</th>
+    <th>From</th>
+    <th>Subject</th>
+  <tr>
   {% for email in email_list %}
-  {%endfor%}
+    <tr>
+      <td>{{ email.timestamp }}</td>
+      <td>{{ email.emailer.name }}</td>
+      <td>{{ email.subject }}</td>
+      <td>
+      {% for ep in email.emailpoint_set.all %}
+        {{ ep.category }} awarded to {{ ep.email.emailer.name }}
+        {% if not forloop.last %}<br />{% endif %}
+      {% endfor %}
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
 
 {%endblock%}

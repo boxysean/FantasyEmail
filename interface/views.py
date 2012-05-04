@@ -99,11 +99,6 @@ def teamList(request):
     return render_to_response("teamList.html", locals(), context_instance=RequestContext(request))
 
 def emailList(request):
-    email_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
-    categories = sorted(Category.objects.all(), key=lambda a: a.name)
-    for team in team_list:
-        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
-        team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
-
-    return render_to_response("teamList.html", locals(), context_instance=RequestContext(request))
+    email_list = Email.objects.all().order_by("timestamp").reverse()
+    return render_to_response("emailList.html", locals(), context_instance=RequestContext(request))
 
