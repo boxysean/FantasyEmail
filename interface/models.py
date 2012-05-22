@@ -27,6 +27,7 @@ class EmailAddress(models.Model):
 class Team(models.Model):
 	name = models.CharField(max_length=200)
 	user = models.ForeignKey(User)
+	icon = models.CharField(max_length=200)
         # slug = AutoSlugField(populate_from='name')
         def __str__(self):
 		return "%s: %s" % (self.user, self.name)
@@ -63,7 +64,7 @@ class EmailerStats(models.Model):
 	category = models.ForeignKey(Category)
 	stat = models.IntegerField()
 	total = models.BooleanField()
-	def __str__(self): return "[%s] %s: %s" % (self.category, self.emailer, self.points)
+	def __str__(self): return "[%s] %s: %s" % (self.category, self.emailer, self.stat)
 
 class TeamPoints(models.Model):
 	team = models.ForeignKey(Team)

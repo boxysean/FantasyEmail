@@ -2,39 +2,53 @@
 
 {% block content %}
 
-  <h1>{{object.name}}</h1>
+  <h1><img src="{{ STATIC_URL }}/img/logo-big/{{ team.icon }}" /> {{ team.name }}</h1>
   <br>
-  <h3> Players On This  Team </h3>
-  <ul>
+  <h3>Emailers On This Team </h3>
 
-  {% for player in object.player_set.all %}
-    <li> {{player.name}} </li>
-  {%endfor %}
-  </ul>
-
-
-  <h3> Team Points <small> By Category</small> </h3>
-  <ul>
-  {% for ranking in object.teampoints_set.all %}
-    <li> {{ranking.category}} : {{ranking.points}} </li>
-  {%endfor%}
-  </ul>
-  <h3> Total Score </h3>
-  <ul>
-    {% for tscore in object.teamscore_set.all %}
-    {% if forloop.last %}
-    <li class="strong total"> Grand {{tscore.category}}: {{tscore.score}} </li>
-    {% else %}
-    <li> {{tscore.category}}: {{tscore.score}} </li>
-    {% endif %}
-    {%endfor %}
-    </ul>
-  <br><br><br>
-
-
-
-
-
-
+  <table id="myTable" class="tablesorter">
+  <thead>
+    <tr>
+      <th>Name</th>
+    {% for category in categories %}
+      <th>{{ category.name }}</th>
+    {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for emailer in teamemailers %}
+    <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+      <td>{{ emailer.name }}</td>
+      {% for stat in emailer.stats_list %}
+      <td class="center">{{ stat.stat }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+    <tr>
+      <td class="strong">Total</td>
+      {% for stat in teamstats %}
+      <td class="center strong">{{ stat.stat }}</td>
+      {% endfor %}
+    </tr>
+  </table>
 
 {% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{STATIC_URL}}tablesorter/themes/blue/style.css" media="screen" />
+{% endblock %}
+
+{% block scripts %}
+<script src="{{STATIC_URL}}tablesorter/jquery.tablesorter.min.js"></script>
+<script>
+  jQuery(document).ready(function() {
+    $("#myTable").tablesorter({
+      headers: {
+        3: { sorter: false }
+      }
+    }); 
+  });
+</script>
+{% endblock %}
+

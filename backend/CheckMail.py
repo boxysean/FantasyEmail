@@ -46,7 +46,8 @@ class AwardPoints:
 		
 		### functions to award email points ###
 
-		categories = [ConversationStarterCategory, LateNightCategory, LastReplyCategory, OneWordCategory]
+#		categories = [ConversationStarterCategory, LateNightCategory, LastReplyCategory, OneWordCategory]
+		categories = [ProfessionalCategory, LateNightCategory, PassingGradeCategory, OneWordCategory]
 		self.categoriesInst = []
 
 		for category in categories:

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{%block content %}
+  <h1 class="center">Overview</h1>
+  <table id="myTable" class="tablesorter bigger" style="width: 640px; margin-left: 200px; margin-top: 40px;">
+    <thead>
+      <th>Rank</th>
+      <th>Team</th>
+      <th>Points</th>
+    </thead>
+    <tbody>
+    {% for team in team_list %}
+      <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+        <td class="center">{{ forloop.counter }}</td>
+        <td><img src="{{ STATIC_URL }}/img/logo-big/{{ team.icon }}" /> <a href="/team/{{team.id}}">{{team.name}}</a></td>
+        <td class="center">{{team.getTotalPoints}}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{%endblock%}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{STATIC_URL}}tablesorter/themes/blue/style.css" media="screen" />
+{% endblock %}
+
+{% block scripts %}
+<script src="{{STATIC_URL}}tablesorter/jquery.tablesorter.min.js"></script>
+<script>
+  jQuery(document).ready(function() {
+    $("#myTable").tablesorter({
+      headers: {
+        3: { sorter: false }
+      }
+    }); 
+  });
+</script>
+{% endblock %}
+

@@ -37,3 +37,15 @@
   list-style: none;
   border: 1px solid gray;
 }
+
+.center {
+  text-align: center;
+}
+
+.bigger {
+  font-size: 18pt !important;
+}
+
+.bigger td, .bigger th {
+  line-height: 48px !important;
+}

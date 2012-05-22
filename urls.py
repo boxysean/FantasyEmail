@@ -18,11 +18,11 @@ emailerList = ListView.as_view(model=Emailer, template_name= "emailerList.html")
 urlpatterns = patterns('',
     # Examples:
     url(r'^$', 'interface.views.home', name='home'),
-    url(r'^team/(?P<pk>[a-z\d]+)/$', teamDetail, name='teamDetail'),
-    url(r'^emailers/$', emailerList, name='emailerList'),
+    url(r'^team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
+    url(r'^emailers/$', 'interface.views.emailerList', name='emailerList'),
     url(r'^emails/$', 'interface.views.emailList', name='emailList'),
-    url(r'^teams/$', 'interface.views.teamList', name='teamList'),
-    url(r'^emailer/(?P<pk>[a-z\d]+)/$', emailerDetail, name='emailerDetail'),
+    url(r'^overview/$', 'interface.views.overview', name='teamList'),
+    url(r'^standings/$', 'interface.views.standings', name='teamList'),
 
     url(r'^help/$', direct_to_template, {'template': 'help.html'}),
 

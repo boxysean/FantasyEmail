@@ -2,25 +2,55 @@
 
 {% block content %}
   <h1>Email List</h1>
-  <table>
+  <table id="myTable" class="tablesorter">
+  <thead>
   <tr>
-    <th>When</th>
+    <th>Time</th>
     <th>From</th>
     <th>Subject</th>
+    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Award</th>
   <tr>
+  </thead>
+  <tbody>
   {% for email in email_list %}
-    <tr>
-      <td>{{ email.timestamp }}</td>
+    <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+      <td><abbr class="timeago" title="{{ email.isoformat }}">{{ email.timestamp }}</abbr></td>
       <td>{{ email.emailer.name }}</td>
       <td>{{ email.subject }}</td>
       <td>
-      {% for ep in email.emailpoint_set.all %}
-        {{ ep.category }} awarded to {{ ep.email.emailer.name }}
-        {% if not forloop.last %}<br />{% endif %}
-      {% endfor %}
+        <ul>
+        {% for ep in email.emailpoint_set.all %}
+          <li>{{ ep.category }}
+          {% if ep.category.name == "Conversation Starter" %}
+            (awarded to {{ ep.awardTo.name }}) {% endif %}
+          {% if not forloop.last %}<br />{% endif %}
+          </li>
+        {% endfor %}
+        </ul>
       </td>
     </tr>
   {% endfor %}
+  </tbody>
   </table>
 
 {%endblock%}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{STATIC_URL}}tablesorter/themes/blue/style.css" media="screen" />
+{% endblock %}
+
+{% block scripts %}
+<script src="{{STATIC_URL}}js/jquery.timeago.js"></script>
+<script src="{{STATIC_URL}}tablesorter/jquery.tablesorter.min.js"></script>
+<script>
+  jQuery(document).ready(function() {
+    jQuery("abbr.timeago").timeago();
+
+    $("#myTable").tablesorter({
+      headers: {
+        3: { sorter: false }
+      }
+    }); 
+  });
+</script>
+{% endblock %}

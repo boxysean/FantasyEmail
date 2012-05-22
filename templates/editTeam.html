@@ -1,54 +1,62 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>Manage {{team.name}}</h1>
+  <h1><img src="{{ STATIC_URL }}/img/logo-big/{{ team.icon }}" /> {{team.name}}</h1>
   <br>
-  <h3> Players On This Team </h3>
-  <ul>
+  <h3>Emailers On This Team</h3>
 
-    {%if team.player_set.all|length > 0 %}
-  {% for player in team.player_set.all %}
-  <li> <a href="/emailer/{{player.emailer.id}}">{{player.name}} </a>  
-      <ul>
-        {% for  rank in  player.emailer.emailerpointranking_set.all %} 
-        <li> {{rank.category}}= {{rank.points}} points </li>
-         {%endfor%}
-      </ul>
-    </li>
-  {%endfor %}
-  </ul>
-  <h3> Team Points <small> By Category</small> </h3>
-  <ul>
-    {# this is no longer actually ranking but w/e #}
-  {% for ranking in team.teampoints_set.all %}
-    <li> {{ranking.category}} : {{ranking.points}} </li>
-  {%endfor%}
-  </ul>
-  <h3> Total Score </h3>
-  <ul>
-    {% for tscore in team.teamscore_set.all %}
-    {% if forloop.last %}
-    <li class="strong total"> Grand {{tscore.category}}: {{tscore.score}} </li>
-    {% else %}
-    <li> {{tscore.category}}: {{tscore.score}} </li>
-    {% endif %}
-    {%endfor %}
-    </ul>
-  <br><br><br>
+  <table id="myTable" class="tablesorter">
+  <thead>
+    <tr>
+      <th>Name</th>
+    {% for category in categories %}
+      <th>{{ category.name }}</th>
+    {% endfor %}
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for emailer in teamemailers %}
+    <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
+      <td>{{ emailer.name }}</td>
+      {% for stat in emailer.stats_list %}
+      <td class="center">{{ stat.stat }}</td>
+      {% endfor %}
+      <td><a class="btn btn-mini btn-danger" href="/remove/{{emailer.id}}">Cut this emailer</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+    <tr>
+      <td class="strong">Total</td>
+      {% for stat in teamstats %}
+      <td class="center strong">{{ stat.stat }}</td>
+      {% endfor %}
+      <td></td>
+    </tr>
+  </table>
 
-  <h3> Kick Players Off Your Team</h3>
-  {% for player in team_players %}
-  <a href="/emailer/{{player.emailer.id}}">{{player.name}} </a>  <a class="btn btn-small  btn-danger" href="/remove/{{player.id}}"> Cut this player </a>
-  <br>
-  <br>
-  {%endfor%}
+  {%if team.player_set.all|length > 0 %}
+  <a class="btn btn-success btn-large"  href="/emailers/">Recruit other emailers</a>
+  {%else%}
+  <a class="btn btn-success btn-large"  href="/emailers/">Add emailer</a>
+  {%endif%}
 
-  <br>
-    <a class="btn btn-success btn-large"  href="/emailers/"> Recruit other  emailers.</a>
-    {%else%} {# end of player length #}
-  <p> None. Why don't you add some</p>
-    <a class="btn btn-success btn-large"  href="/emailers/"> Add  players.</a>
-    {%endif%}
-    <br><br>
-    <br><br>
 {% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{STATIC_URL}}tablesorter/themes/blue/style.css" media="screen" />
+{% endblock %}
+
+{% block scripts %}
+<script src="{{STATIC_URL}}tablesorter/jquery.tablesorter.min.js"></script>
+<script>
+  jQuery(document).ready(function() {
+    $("#myTable").tablesorter({
+      headers: {
+        5: { sorter: false }
+      }
+    }); 
+  });
+</script>
+{% endblock %}
+

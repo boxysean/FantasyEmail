@@ -29,7 +29,7 @@ admin.site.register(models.EmailAddress, EmailAddressAdmin)
 
 
 class TeamAdmin(admin.ModelAdmin):
-	list_display = ("user", "name")
+	list_display = ("user", "name", "icon")
 	ordering = ("user",)
 	search_fields = ("user",)
 

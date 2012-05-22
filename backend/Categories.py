@@ -5,6 +5,12 @@ from datetime import datetime
 import os
 import sys
 
+import curses
+from curses.ascii import isdigit
+import nltk
+from nltk.corpus import cmudict
+
+
 sys.path = sys.path + ["/Users/boxysean/Documents/workspace/riskyListy"]
 
 from django.conf import settings
@@ -154,7 +160,7 @@ class LateNightCategory(Category):
 		date = datetime.fromtimestamp(mail.timestamp)
 		hour = (int(date.strftime("%H"))-4)%24 # omg so bad
 
-		if 20 <= hour <= 24 or 0 <= hour <= 3:
+		if 19 <= hour <= 24 or 0 <= hour <= 3:
 			self.award(mail, self, 1)
 			return True
 
@@ -170,3 +176,90 @@ class PraiseTheCreatorsCategory(Category):
 			return True
 		return False
 
+class PassingGradeCategory(Category):
+	catName = "Passing Grade"
+	dict = cmudict.dict()
+	punctuation = re.compile("[.,!?()\[\]<>\"]+")
+	runningFk = 0
+	calcs = 0
+	threshold = 4.0
+	
+
+	def nsyl(self, word):
+		try:
+			return max([len(list(y for y in x if isdigit(y[-1]))) for x in self.dict[word.lower()]])
+		except:
+			return 0
+
+	def check(self, mail):
+		lines = mail.getLines()
+		nWords = 0
+		nSyl = 0
+		nSentences = 0
+		for line in lines:
+#			print line
+			nWords = nWords + len(line.split())
+			nSentences += line.count('.') + line.count('!') + line.count('?')
+			for word in line.split():
+				word = self.punctuation.sub("", word)
+				nSyl = nSyl + self.nsyl(word)
+
+		nSentences = max(nSentences, 1)
+
+		fk = 0.39 * (float(nWords) / nSentences) + 11.8 * (float(nSyl) / nWords) - 15.59
+		self.runningFk += fk
+		self.calcs += 1
+
+		#print mail.subject, "words", nWords, "syls", nSyl, "sentences", nSentences, "fk", fk, "running fk", self.runningFk / self.calcs, "\n"
+
+		if fk >= self.threshold:
+			self.award(mail, self, 1)
+			return True
+
+		return False
+
+class ProfessionalCategory(Category):
+	catName = "Professional"
+	dict = cmudict.dict()
+	punctuation = re.compile("[.,!?()\[\]<>\"]+")
+	alphaNumeric = re.compile("^[\W_]+$")
+	numeric = re.compile("^[0-9.+-]+$")
+	banned_words = set(["ahole","anus","ash0le","ash0les","asholes","ass","Ass Monkey","Assface","assh0le","assh0lez","asshole","assholes","assholz","asswipe","azzhole","bassterds","bastard","bastards","bastardz","basterds","basterdz","Biatch","bitch","bitches","Blow Job","boffing","butthole","buttwipe","c0ck","c0cks","c0k","Carpet Muncher","cawk","cawks","Clit","cnts","cntz","cock","cockhead","cock-head","cocks","CockSucker","cock-sucker","crap","cum","cunt","cunts","cuntz","dick","dild0","dild0s","dildo","dildos","dilld0","dilld0s","dominatricks","dominatrics","dominatrix","dyke","enema","f u c k","f u c k e r","fag","fag1t","faget","fagg1t","faggit","faggot","fagit","fags","fagz","faig","faigs","fart","flipping the bird","fuck","fucker","fuckin","fucking","fucks","Fudge Packer","fuk","Fukah","Fuken","fuker","Fukin","Fukk","Fukkah","Fukken","Fukker","Fukkin","g00k","gay","gayboy","gaygirl","gays","gayz","God-damned","h00r","h0ar","h0re","hells","hoar","hoor","hoore","jackoff","jap","japs","jerk-off","jisim","jiss","jizm","jizz","knob","knobs","knobz","kunt","kunts","kuntz","Lesbian","Lezzian","Lipshits","Lipshitz","masochist","masokist","massterbait ","masstrbait","masstrbate","masterbaiter","masterbate","masterbates","Motha Fucker","Motha Fuker","Motha Fukkah","Motha Fukker","Mother Fucker","Mother Fukah","Mother Fuker","Mother Fukkah","Mother Fukker","mother-fucker","Mutha Fucker","Mutha Fukah","Mutha Fuker","Mutha Fukkah","Mutha Fukker","n1gr","nastt ","nigger;","nigur;","niiger;","niigr;","orafis","orgasim;","orgasm","orgasum","oriface","orifice","orifiss","packi","packie","packy","paki","pakie","paky","pecker","peeenus","peeenusss","peenus","peinus","pen1s","penas","penis","penis-breath","penus","penuus","Phuc","Phuck","Phuk","Phuker","Phukker","polac","polack","polak","Poonani","pr1c","pr1ck","pr1k","pusse","pussee","pussy","puuke","puuker","queer","queers","queerz","qweers","qweerz","qweir","recktum","rectum","retard","sadist","scank","schlong","screwing","semen","sex","sexy","Sh!t","sh1t","sh1ter","sh1ts","sh1tter","sh1tz","shit","shits","shitter","Shitty","Shity","shitz","Shyt","Shyte","Shytty","Shyty","skanck","skank","skankee","skankey","skanks","Skanky","slut","sluts","Slutty","slutz","son-of-a-bitch","tit","turd","va1jina","vag1na","vagiina","vagina","vaj1na","vajina","vullva","vulva","w0p","wh00r","wh0re","whore","xrated","xxx","asses","lol","omg","stfu","rofl","lmao","g2g","gtg","roflmao","lulz","lul"])
+
+	rok = 0
+	rcount = 0
+
+	threshold = 0.95
+
+	def check(self, mail):
+		lines = mail.getLines()
+		okCount = 0
+		count = 0
+		okay = True
+		for line in lines:
+			for word in line.split():
+				word = self.punctuation.sub("", word).lower()
+				if self.alphaNumeric.match(word):
+					continue
+				count += 1
+				if word in self.banned_words:
+					okay = False
+				elif word in self.dict:
+					okCount += 1
+				elif self.numeric.match(word):
+					okCount += 1
+				else:
+	#				print "nope", word
+					pass
+
+		self.rok += okCount
+		self.rcount += count
+	#	print count, okCount, float(self.rok) / self.rcount
+
+		if okay and float(okCount) / count >= self.threshold:
+	#		print mail.subject, mail.fromAddr, "professh!", okCount, count, float(okCount) / count
+			self.award(mail, self, 1)
+			return True
+
+		return False
+		

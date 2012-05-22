@@ -2,6 +2,8 @@
   <title> RiskyListy!</title>
   <link rel="stylesheet" href="{{STATIC_URL}}bootstrap/css/bootstrap.css" media="screen" />
   <link rel="stylesheet" href="{{STATIC_URL}}ourstyle.css" media="screen" />
+  {% block styles %}
+  {% endblock %}
 </head>
 
 <body>
@@ -11,16 +13,21 @@
               <a class="brand" href="/">
                 <img src="{{STATIC_URL}}img/logo.gif" alt="RiskyListy" />
                  </a>
+		<div class="pull-left"><p style="font-size: 200%; padding-top: 40px; font-style: italic">Turn any email list into a fantasy sports game</p>
+<p style="font-style: italic">Made by Sean McIntyre, Zach Schwartz, Tiffany Chou, Naliaka Wakhisi, Sheiva Rezvani
+</p></div>
              <ul class="nav pull-right">
-               <li> <a href="/help/">Rules/Help </a></li>
                {%if not user.is_authenticated %}
                <li> <a href="/accounts/login/">Login </a></li>
                <li> <a href="/accounts/register/">Register </a></li>
                {% else %} 
+               <li> <a href="/overview">Overview</a></li>
+               <li> <a href="/standings">Standings</a></li>
                <li> <a href="/edit">Your Team </a></li>
-               <li> <a href="/teams"> Other Teams </a></li>
-               <li> <a href="/emailers"> List All Emailers </a></li>
+               <li> <a href="/emailers">All Emailers</a></li>
+               <li> <a href="/emails">All Emails</a></li>
                {% endif %}
+               <li> <a href="/help/">Rules/Help </a></li>
              <ul>
                    
             </div>
@@ -31,6 +38,10 @@
     {% block content %}
     {%endblock %}
   </div> {#end container #}
+
+  <div style="text-align: center; margin-top: 20px; color: #999; font-style: italic">
+  </div>
+
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -45,6 +56,12 @@
   })();
 
 </script>
+
+  <script src="{{STATIC_URL}}js/jquery.min.js"></script>
+
+  {% block scripts %}
+  {% endblock %}
+
 </body>
 
 
