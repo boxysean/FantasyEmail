@@ -135,6 +135,7 @@ def emailerList(request):
     emailers = Emailer.objects.all().order_by("name")
     user_team = Team.objects.filter(user=request.user)
     for emailer in emailers:
+        print emailer, type(emailer)
         emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
         emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
         player_set = emailer.player_set.all()
@@ -152,9 +153,13 @@ def teamDetail(request, id):
     categories = sorted(Category.objects.all(), key=lambda a: a.name)
     teamemailers = team.player_set.all()
     for emailer in teamemailers:
-        emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+        ### really bad hack :( ###
+        try:
+            emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+        except:
+            continue
     teamstats = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
-    teampoints = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+#    teampoints = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 
     return render_to_response("teamDetail.html", locals(), context_instance=RequestContext(request))
 

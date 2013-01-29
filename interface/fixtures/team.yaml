@@ -3,12 +3,14 @@
   fields:
     name: "Sean's team"
     user: 1
+    icon: "dog.png"
 
 - model: interface.Team
   pk: 2
   fields:
     name: "Zach's team"
     user: 2
+    icon: "squirrel.png"
 
 - model: interface.Player
   pk: 1

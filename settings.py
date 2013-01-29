@@ -129,7 +129,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-    'registration_defaults',
+    # 'registration_defaults',
     'registration',
     'interface',
     # Uncomment the next line to enable admin documentation:

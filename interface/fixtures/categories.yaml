@@ -22,3 +22,15 @@
     name: Late Night
     description: ""
 
+- model: interface.category
+  pk: 5
+  fields:
+    name: Professional
+    description: ""
+
+- model: interface.category
+  pk: 6
+  fields:
+    name: Passing Grade
+    description: ""
+

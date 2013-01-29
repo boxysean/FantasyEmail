@@ -4,5 +4,5 @@ mbox-itp
 local_settings.py
 wsgi_handler.py
 config.yaml
-backend/game.yaml
+game.yaml
 backend/mbox*

@@ -1,0 +1,26 @@
+name: Office game
+
+db: db
+
+startDate: 2012-03-20 15:30:00
+endDate: 2012-03-23 15:30:00
+
+activeSpots: 5
+benchSpots: 0
+
+categories:
+ - ConversationStarterCategory
+ - FreeFoodCategory
+ - GIFCategory
+ - PraiseTheCreatorCategory 
+ - ThankYouCategory
+
+mailboxes:
+ - type: UnixMailbox
+   file: /var/mail/itp
+   listAddress: itp-students@lists.nyu.edu
+
+ - type: UnixMailbox
+   file: /home/itp/mbox
+   listAddress: itp-students@lists.nyu.edu
+
