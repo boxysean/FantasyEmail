@@ -17,12 +17,14 @@ from models import *
 
 
 import logging
+import yaml
 
 logger = logging.getLogger(__name__)
 
 
+config = yaml.load(file("game.yaml"))
 
-tzDelta = timedelta(hours=-5)
+tzDelta = timedelta(hours=config["timezone"])
 
 
 def home(request):

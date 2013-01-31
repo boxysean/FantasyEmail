@@ -5,6 +5,8 @@ db: db
 startDate: 2012-03-20 15:30:00
 endDate: 2012-03-23 15:30:00
 
+timezone: -5
+
 activeSpots: 5
 benchSpots: 0
 
