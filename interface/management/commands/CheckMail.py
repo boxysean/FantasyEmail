@@ -51,11 +51,14 @@ class Command(BaseCommand):
 
     c.execute("create index if not exists conversation_subject on conversation (subject, timestamp)")
 
+    # delete Email objects manually because django sometimes pukes if done through orm
+
+    c.execute("delete from interface_email;")
+
     conn.commit()
     c.close()
-  
+
     EmailPoint.objects.all().delete()
-    Email.objects.all().delete()
   
     for mail in mailboxes.getMail():
       self.checkEmail(mail, conn)

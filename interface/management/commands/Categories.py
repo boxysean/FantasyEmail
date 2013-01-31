@@ -201,9 +201,16 @@ class PassingGradeCategory(Category):
 
     return False
 
+class HotAirCategory(Category):
+  catName = "Hot Air"
+
+  def check(self, mail):
+    self.award(mail, self, 1)
+    return True
+
 class PottyMouthCategory(Category):
   catName = "Potty Mouth"
-  banned_words = set(["ahole","anus","ash0le","ash0les","asholes","ass","Ass Monkey","Assface","assh0le","assh0lez","asshole","assholes","assholz","asswipe","azzhole","bassterds","bastard","bastards","bastardz","basterds","basterdz","Biatch","bitch","bitches","Blow Job","boffing","butthole","buttwipe","c0ck","c0cks","c0k","Carpet Muncher","cawk","cawks","Clit","cnts","cntz","cock","cockhead","cock-head","cocks","CockSucker","cock-sucker","crap","cum","cunt","cunts","cuntz","dick","dild0","dild0s","dildo","dildos","dilld0","dilld0s","dominatricks","dominatrics","dominatrix","dyke","enema","f u c k","f u c k e r","fag","fag1t","faget","fagg1t","faggit","faggot","fagit","fags","fagz","faig","faigs","fart","flipping the bird","fuck","fucker","fuckin","fucking","fucks","Fudge Packer","fuk","Fukah","Fuken","fuker","Fukin","Fukk","Fukkah","Fukken","Fukker","Fukkin","g00k","gay","gayboy","gaygirl","gays","gayz","God-damned","h00r","h0ar","h0re","hells","hoar","hoor","hoore","jackoff","jap","japs","jerk-off","jisim","jiss","jizm","jizz","knob","knobs","knobz","kunt","kunts","kuntz","Lesbian","Lezzian","Lipshits","Lipshitz","masochist","masokist","massterbait ","masstrbait","masstrbate","masterbaiter","masterbate","masterbates","Motha Fucker","Motha Fuker","Motha Fukkah","Motha Fukker","Mother Fucker","Mother Fukah","Mother Fuker","Mother Fukkah","Mother Fukker","mother-fucker","Mutha Fucker","Mutha Fukah","Mutha Fuker","Mutha Fukkah","Mutha Fukker","n1gr","nastt ","nigger;","nigur;","niiger;","niigr;","orafis","orgasim;","orgasm","orgasum","oriface","orifice","orifiss","packi","packie","packy","paki","pakie","paky","pecker","peeenus","peeenusss","peenus","peinus","pen1s","penas","penis","penis-breath","penus","penuus","Phuc","Phuck","Phuk","Phuker","Phukker","polac","polack","polak","Poonani","pr1c","pr1ck","pr1k","pusse","pussee","pussy","puuke","puuker","queer","queers","queerz","qweers","qweerz","qweir","recktum","rectum","retard","sadist","scank","schlong","screwing","semen","sex","sexy","Sh!t","sh1t","sh1ter","sh1ts","sh1tter","sh1tz","shit","shits","shitter","Shitty","Shity","shitz","Shyt","Shyte","Shytty","Shyty","skanck","skank","skankee","skankey","skanks","Skanky","slut","sluts","Slutty","slutz","son-of-a-bitch","tit","turd","va1jina","vag1na","vagiina","vagina","vaj1na","vajina","vullva","vulva","w0p","wh00r","wh0re","whore","xrated","xxx","asses","lol","omg","stfu","rofl","lmao","g2g","gtg","roflmao","lulz","lul"])
+  banned_words = set(["ahole","ass","assface","asshat","asshole","assholes","asswipe","azzhole","bastard","bastards","bastardz","basterds","basterdz","biatch","bitch","bitches","butthole","buttwipe","cnts","cntz","cock","cocks","cocksucker","cum","cunt","cunts","cuntz","dick","dildo","dildos","dyke","fag","faggot","fags","fagz","fuck","fucker","fuckin","fucking","fucks","goddamned","goddamn","jizz","motherfucker","motherfuckers","motherfucking","nigger","pussy","retard","retarded","skank","scum","scumbag","fck","cnt""schlong","shit","shits","shitty","whore","asses","clusterfuck", "fucked"])
 
   def __init__(self, dbc):
     Category.__init__(self, dbc)
@@ -219,7 +226,7 @@ class PottyMouthCategory(Category):
     lines = mail.getLines()
     for line in lines:
       line = line.lower()
-      for word in line.split():
+      for word in re.split("\W+", line):
         if word in self.banned_words:
           self.award(mail, self, 1)
           return True
@@ -231,7 +238,7 @@ class ProfessionalCategory(Category):
   punctuation = re.compile("[.,!?()\[\]<>\"]+")
   alphaNumeric = re.compile("^[\W_]+$")
   numeric = re.compile("^[0-9.+-]+$")
-  banned_words = set(["ahole","anus","ash0le","ash0les","asholes","ass","Ass Monkey","Assface","assh0le","assh0lez","asshole","assholes","assholz","asswipe","azzhole","bassterds","bastard","bastards","bastardz","basterds","basterdz","Biatch","bitch","bitches","Blow Job","boffing","butthole","buttwipe","c0ck","c0cks","c0k","Carpet Muncher","cawk","cawks","Clit","cnts","cntz","cock","cockhead","cock-head","cocks","CockSucker","cock-sucker","crap","cum","cunt","cunts","cuntz","dick","dild0","dild0s","dildo","dildos","dilld0","dilld0s","dominatricks","dominatrics","dominatrix","dyke","enema","f u c k","f u c k e r","fag","fag1t","faget","fagg1t","faggit","faggot","fagit","fags","fagz","faig","faigs","fart","flipping the bird","fuck","fucker","fuckin","fucking","fucks","Fudge Packer","fuk","Fukah","Fuken","fuker","Fukin","Fukk","Fukkah","Fukken","Fukker","Fukkin","g00k","gay","gayboy","gaygirl","gays","gayz","God-damned","h00r","h0ar","h0re","hells","hoar","hoor","hoore","jackoff","jap","japs","jerk-off","jisim","jiss","jizm","jizz","knob","knobs","knobz","kunt","kunts","kuntz","Lesbian","Lezzian","Lipshits","Lipshitz","masochist","masokist","massterbait ","masstrbait","masstrbate","masterbaiter","masterbate","masterbates","Motha Fucker","Motha Fuker","Motha Fukkah","Motha Fukker","Mother Fucker","Mother Fukah","Mother Fuker","Mother Fukkah","Mother Fukker","mother-fucker","Mutha Fucker","Mutha Fukah","Mutha Fuker","Mutha Fukkah","Mutha Fukker","n1gr","nastt ","nigger;","nigur;","niiger;","niigr;","orafis","orgasim;","orgasm","orgasum","oriface","orifice","orifiss","packi","packie","packy","paki","pakie","paky","pecker","peeenus","peeenusss","peenus","peinus","pen1s","penas","penis","penis-breath","penus","penuus","Phuc","Phuck","Phuk","Phuker","Phukker","polac","polack","polak","Poonani","pr1c","pr1ck","pr1k","pusse","pussee","pussy","puuke","puuker","queer","queers","queerz","qweers","qweerz","qweir","recktum","rectum","retard","sadist","scank","schlong","screwing","semen","sex","sexy","Sh!t","sh1t","sh1ter","sh1ts","sh1tter","sh1tz","shit","shits","shitter","Shitty","Shity","shitz","Shyt","Shyte","Shytty","Shyty","skanck","skank","skankee","skankey","skanks","Skanky","slut","sluts","Slutty","slutz","son-of-a-bitch","tit","turd","va1jina","vag1na","vagiina","vagina","vaj1na","vajina","vullva","vulva","w0p","wh00r","wh0re","whore","xrated","xxx","asses","lol","omg","stfu","rofl","lmao","g2g","gtg","roflmao","lulz","lul"])
+  banned_words = set(["ahole","ass","assface","asshat","asshole","assholes","asswipe","azzhole","bastard","bastards","bastardz","basterds","basterdz","biatch","bitch","bitches","butthole","buttwipe","cnts","cntz","cock","cocks","cocksucker","cum","cunt","cunts","cuntz","dick","dildo","dildos","dyke","fag","faggot","fags","fagz","fuck","fucker","fuckin","fucking","fucks","goddamned","goddamn","jizz","motherfucker","motherfuckers","motherfucking","nigger","pussy","retard","retarded","skank","scum","scumbag","fck","cnt""schlong","shit","shits","shitty","whore","asses","clusterfuck", "fucked"])
 
   rok = 0
   rcount = 0
