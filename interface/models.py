@@ -1,18 +1,12 @@
 from django.db import models
-# from autoslug import AutoSlugField
-
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User
-
 from django.dispatch import dispatcher
-
-
 
 class Emailer(models.Model):
   name = models.CharField(max_length=200)
   image = models.CharField(max_length=200)
   user = models.ForeignKey(User, null=True, blank=True)
-        # slug = AutoSlugField(populate_from='name')
   def __str__(self):
     return self.name
   class Meta:
@@ -57,6 +51,7 @@ class PlayerTransaction(models.Model):
 class Category(models.Model):
   name = models.CharField(max_length=200)
   description = models.TextField()
+  className = models.CharField(max_length=200)
   def __str__(self): return self.name
 
 class EmailerStats(models.Model):
@@ -112,5 +107,5 @@ def createNewTeam(sender, created, instance=None, **kwargs):
 
 
 
-post_save.connect(createNewTeam, sender=User)
+#post_save.connect(createNewTeam, sender=User)
 

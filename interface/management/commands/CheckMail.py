@@ -82,10 +82,12 @@ class Command(BaseCommand):
     
     ### functions to award email points ###
 
-    categories = [ConversationStarterCategory, FreeFoodCategory, GIFCategory, PraiseTheCreatorsCategory, ThankYouCategory]
     self.categoriesInst = []
 
-    for category in categories:
+    for category in Category.objects.all():
+      # Use reflection in the Categories.py to dynamically load the class
+      # and extract its name
+      mod = __import__("interface.management.commands.Categories", fromlist=[category.className])
+      category = getattr(mod, category.className)
       self.categoriesInst.append(category(conn))
-
 
