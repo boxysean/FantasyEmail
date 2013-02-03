@@ -1,4 +1,4 @@
-# Django settings for riskyListy project.
+# Django settings for Fantasy Email project.
 
 DEBUG = True 
 TEMPLATE_DEBUG = DEBUG
@@ -111,7 +111,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'riskyListy.urls'
+ROOT_URLCONF = 'FantasyEmail.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".

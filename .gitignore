@@ -2,7 +2,6 @@ db
 *.pyc
 mbox-itp
 local_settings.py
-wsgi_handler.py
 config.yaml
 game.yaml
 backend/mbox*

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /root/workspace/riskyListy/backend
+cd /root/workspace/FantasyEmail/backend
 
 pushd ..
 source ./bin/activate
