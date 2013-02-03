@@ -2,10 +2,14 @@
 
     virtualenv .
     pip install -r requirements.txt
+    source bin/activate
+    python manage.py syncdb
 
 ## apache
 
 Copy contents of apache folder into `/etc/apache2/sites-available` and make a symlink from `/etc/apache2/sites-enabled/FantasyEmail` to `/etc/apache2/sites-available/FantasyEmail`.
+
+    sudo apache2ctl restart
 
 # Old...
 
