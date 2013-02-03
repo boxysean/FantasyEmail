@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+
+{% block pagetitle %}
+- Standings
+{% endblock pagetitle %}
+
 {%block content %}
   <h1>Overall Points</h1>
   <table id="overallpoints" class="tablesorter">
@@ -50,47 +55,6 @@
       </tr>
     {%endfor%}
     </tbody>
-  </table>
-
-  <br />
-  <br />
-
-  <h1>All Emailers</h1>
-
-  <table id="emailers" class="tablesorter">
-  <thead>
-    <tr>
-      <th>Name</th>
-      {% for category in categories %}
-      <th>{{ category.name }}</th>
-      {% endfor %}
-      <th>Total</th>
-      <th>Team</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-   {% for emailer in emailers %}
-    <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
-      <td>{{emailer}}</td>
-      {% for stat in emailer.stats_list %}
-      <td class="center">{{ stat.stat }}</td>
-      {% endfor %}
-      <td class="center">{{ emailer.stats_total }}</td>
-      <td>{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/team-logos/small/{{ emailer.owned_by_icon }}" /> {% endif %}{{ emailer.owned_by }}</td>
-      {% if emailer.player_set.all|length == 0 %}
-        <td><a class="btn btn-mini btn-success" href="/add/{{ emailer.id }}">Recruit this emailer</a></td>
-      {% else %}
-        {% if emailer.owns_player %}
-          <td><a class="btn btn-mini btn-danger" href="/remove/{{ emailer.id }}">Cut this emailer</a></td>
-        {% else %}
-          <td></td>
-        {% endif %}
-      {% endif %}
-      </td>
-    </tr>
-  {%endfor%}
-  </tbody>
   </table>
 
 {%endblock%}
