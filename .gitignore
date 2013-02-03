@@ -5,3 +5,10 @@ local_settings.py
 config.yaml
 game.yaml
 backend/mbox*
+
+# virtualenv
+
+bin/
+include/
+lib/
+local/

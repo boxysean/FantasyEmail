@@ -1,0 +1,32 @@
+<VirtualHost *:80>
+        ServerName fantasyemail.com
+        ServerAlias www.fantasyemail.com
+        ServerAdmin webmaster@localhost
+        ErrorLog /var/log/apache2/error.log
+        CustomLog /var/log/apache2/access.log combined
+        DocumentRoot /var/www/fantasyemail.com
+
+	Alias /robots.txt /var/www/fantasyemail.com/static/robots.txt
+	Alias /favicon.ico /var/www/fantasyemail.com/static/favicon.ico
+
+	AliasMatch ^/([^/]*\.css) /var/www/fantasyemail.com/static/styles/$1
+
+	Alias /static/ /var/www/fantasyemail.com/static/
+	Alias /media/ /var/www/fantasyemail.com/media/
+
+	<Directory /var/www/fantasyemail.com/static>
+		Order deny,allow
+		Allow from all
+	</Directory>
+
+	<Directory /var/www/fantasyemail.com/media>
+		Order deny,allow
+		Allow from all
+	</Directory>
+
+	WSGIScriptAlias / /var/www/fantasyemail.com/wsgi_handler.py
+	WSGIDaemonProcess FantasyEmail user=django group=django processes=1 threads=10 python-path=/var/www/fantasyemail.com/:/var/www/fantasyemail.com/lib/python2.7/site-packages
+	WSGIProcessGroup FantasyEmail
+
+</VirtualHost> 
+
