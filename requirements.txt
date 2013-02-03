@@ -1,0 +1,6 @@
+Django==1.4.3
+PyYAML==3.10
+argparse==1.2.1
+nltk==2.0.4
+pytz==2012j
+wsgiref==0.1.2
