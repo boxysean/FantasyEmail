@@ -14,7 +14,7 @@
     {% for team in team_list %}
       <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
         <td>{{ forloop.counter }}</td>
-        <td><!--<img src="{{ STATIC_URL }}/img/{{ team.icon }}" /> --><a href="/team/{{team.id}}">{{team.name}}</a></td>
+        <td><img src="{{ STATIC_URL }}/img/team-logos/small/{{ team.icon }}" /> <a href="/team/{{team.id}}">{{team.name}}</a></td>
         {% for tscore in team.teampoints_list %}
           <td class="center">{{tscore.points}}</td>
         {% endfor %}
@@ -42,7 +42,7 @@
     {% for team in team_list %}
       <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
         <td>{{ forloop.counter }}</td>
-        <td><!--<img src="{{ STATIC_URL }}/img/{{ team.icon }}" /> --><a href="/team/{{team.id}}">{{team.name}}</a></td>
+        <td><img src="{{ STATIC_URL }}/img/team-logos/small/{{ team.icon }}" /> <a href="/team/{{team.id}}">{{team.name}}</a></td>
         {% for tscore in team.teamstats_list %}
         <td class="center">{{tscore.stat}}</td>
         {% endfor%}
@@ -77,7 +77,7 @@
       <td class="center">{{ stat.stat }}</td>
       {% endfor %}
       <td class="center">{{ emailer.stats_total }}</td>
-      <td><!--{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/{{ emailer.owned_by_icon }}" /> {% endif %}-->{{ emailer.owned_by }}</td>
+      <td>{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/team-logos/small/{{ emailer.owned_by_icon }}" /> {% endif %}{{ emailer.owned_by }}</td>
       {% if emailer.player_set.all|length == 0 %}
         <td><a class="btn btn-mini btn-success" href="/add/{{ emailer.id }}">Recruit this emailer</a></td>
       {% else %}
