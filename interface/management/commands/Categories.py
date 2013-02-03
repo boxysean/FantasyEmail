@@ -116,6 +116,18 @@ class OneWordCategory(Category):
 
     return False
 
+class ManicCategory(Category):
+  catName = "Manic"
+
+  def check(self, mail):
+    lines = mail.getLines()
+    for line in lines:
+      if re.search(r"(!!|\?\?)", line):
+        self.award(mail, self, 1)
+        return True
+
+    return False
+
 class LastReplyCategory(Category):
   catName = "Last Reply"
 
