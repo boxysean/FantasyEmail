@@ -7,6 +7,14 @@ Tested with python 2.7.3
     source bin/activate
     python manage.py syncdb
 
+Edit the `game.yaml.sample` file and save it as `game.yaml`
+    
+    python manage.py SetupGame
+
+## Running from django built in server
+
+    python manage.py runserver http://yourserver.com:8080
+
 ## apache
 
 Copy contents of apache folder into `/etc/apache2/sites-available` and make a symlink from `/etc/apache2/sites-enabled/FantasyEmail` to `/etc/apache2/sites-available/FantasyEmail`.
@@ -15,6 +23,12 @@ Copy contents of apache folder into `/etc/apache2/sites-available` and make a sy
     sudo apache2ctl restart
 
 www-data is your apache user. If www-data is not your apache user, change the apache config appropriately.
+
+From within `python manage.py shell`, run the following command to fix [this](http://stackoverflow.com/questions/11814059/site-matching-query-does-not-exist):
+
+    from django.contrib.sites.models import Site
+    new_site = Site.objects.create(domain='foo.com', name='foo.com')
+    print new_site.id
 
 # Old...
 

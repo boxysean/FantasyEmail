@@ -20,10 +20,10 @@ class Command(BaseCommand):
   help = "whatever"
 
   def handle(self, *args, **options):
-    config = yaml.load(file("game.yaml"))
+    config = yaml.load(open("game.yaml"))
 
     self.buildCategories(config)
-#    self.createPlayerAccounts(config)
+    self.createPlayerAccounts(config)
 
   def buildCategories(self, config):
     Category.objects.all().delete()
