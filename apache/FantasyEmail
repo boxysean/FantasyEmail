@@ -25,7 +25,7 @@
 	</Directory>
 
 	WSGIScriptAlias / /var/www/fantasyemail.com/wsgi_handler.py
-	WSGIDaemonProcess FantasyEmail user=django group=django processes=1 threads=10 python-path=/var/www/fantasyemail.com/:/var/www/fantasyemail.com/lib/python2.7/site-packages
+	WSGIDaemonProcess FantasyEmail user=www-data group=www-data processes=1 threads=10 python-path=/var/www/fantasyemail.com/:/var/www/fantasyemail.com/lib/python2.7/site-packages
 	WSGIProcessGroup FantasyEmail
 
 </VirtualHost> 

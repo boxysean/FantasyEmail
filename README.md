@@ -1,5 +1,7 @@
 # Installation
 
+Tested with python 2.7.3
+
     virtualenv .
     pip install -r requirements.txt
     source bin/activate
@@ -9,7 +11,10 @@
 
 Copy contents of apache folder into `/etc/apache2/sites-available` and make a symlink from `/etc/apache2/sites-enabled/FantasyEmail` to `/etc/apache2/sites-available/FantasyEmail`.
 
+    sudo chown -R www-data *
     sudo apache2ctl restart
+
+www-data is your apache user. If www-data is not your apache user, change the apache config appropriately.
 
 # Old...
 
