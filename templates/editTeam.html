@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block pagetitle %}
+- {{ team.name }}
+{% endblock pagetitle %}
+
 {% block content %}
   <h1><img src="{{ STATIC_URL }}/img/team-logos/big/{{ team.icon }}" /> {{team.name}}</h1>
   <br>
