@@ -68,14 +68,9 @@
 <script>
   jQuery(document).ready(function() {
     $("#overallpoints").tablesorter();
-    $("#emailers").tablesorter({
+    $("#overallstats").tablesorter({
       headers: {
-        7: { sorter: false }
-      }
-    });
-     $("#overallstats").tablesorter({
-      headers: {
-        6: { sorter: false }
+        {{ stats_no_sorter }}: { sorter: false }
       }
     });
   });

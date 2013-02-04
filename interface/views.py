@@ -111,8 +111,15 @@ def standings(request):
     team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
     categories = sorted(Category.objects.all(), key=lambda a: a.name)
     for team in team_list:
-        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
         team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+        if not team.teampoints_list:
+            team.teampoints_list = [{"points": 0}] * len(categories)
+
+        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+        if not team.teamstats_list:
+            team.teamstats_list = [{"stat": 0}] * len(categories)
+
+    stats_no_sorter = len(categories) + 2
 
     return render_to_response("standings.html", locals(), context_instance=RequestContext(request))
 
