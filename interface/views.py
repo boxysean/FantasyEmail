@@ -158,12 +158,12 @@ def teamDetail(request, game, id):
         categories = sorted(Category.objects.all(), key=lambda a: a.name)
         teamemailers = team.player_set.all()
         for emailer in teamemailers:
-            ### really bad hack :( ###
-            try:
-                emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
-            except:
-                continue
+            emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+            if not emailer.stats_list:
+                emailer.stats_list = [{"stat": 0}] * len(categories)
         teamstats = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+        if not teamstats:
+            teamstats = [{"stat": 0}] * len(categories)
         return render_to_response("teamDetail.html", locals(), context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/accounts/login/')
