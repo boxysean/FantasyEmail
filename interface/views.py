@@ -125,6 +125,10 @@ def emailerList(request):
       user_team = None
     for emailer in emailers:
         emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+        print "len of stats_list", len(emailer.stats_list)
+        if not emailer.stats_list:
+            emailer.stats_list = [{"stat": 0}] * len(categories)
+            print emailer.stats_list
         emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
         player_set = emailer.player_set.all()
         if len(player_set) == 1:
