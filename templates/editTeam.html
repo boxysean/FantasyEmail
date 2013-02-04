@@ -26,7 +26,7 @@
       {% for stat in emailer.stats_list %}
       <td class="center">{{ stat.stat }}</td>
       {% endfor %}
-      <td><a class="btn btn-mini btn-danger" href="/remove/{{emailer.id}}">Cut this emailer</a></td>
+      <td><a class="btn btn-mini btn-danger" href="/{{game}}/remove/{{emailer.id}}">Cut this emailer</a></td>
     </tr>
     {% endfor %}
   </tbody>
@@ -40,9 +40,9 @@
   </table>
 
   {%if team.player_set.all|length > 0 %}
-  <a class="btn btn-success btn-large"  href="/emailers/">Recruit other emailers</a>
+  <a class="btn btn-success btn-large"  href="/{{game}}/emailers/">Recruit other emailers</a>
   {%else%}
-  <a class="btn btn-success btn-large"  href="/emailers/">Add emailer</a>
+  <a class="btn btn-success btn-large"  href="/{{game}}/emailers/">Add emailer</a>
   {%endif%}
 
 {% endblock %}

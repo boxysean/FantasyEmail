@@ -14,21 +14,20 @@ emailerDetail = DetailView.as_view(model=Emailer, template_name= "emailerDetail.
 emailerList = ListView.as_view(model=Emailer, template_name= "emailerList.html")
 # teamList = ListView.as_view(model=Team, template_name= "teamList.html")
 
-
 urlpatterns = patterns('',
     # Examples:
     url(r'^$', 'interface.views.home', name='home'),
-    url(r'^team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
-    url(r'^emailers/$', 'interface.views.emailerList', name='emailerList'),
-    url(r'^emails/$', 'interface.views.emailList', name='emailList'),
-    url(r'^overview/$', 'interface.views.overview', name='teamList'),
-    url(r'^standings/$', 'interface.views.standings', name='teamList'),
+    url(r'^(?P<game>[\w-]+)/team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
+    url(r'^(?P<game>[\w-]+)/emailers/$', 'interface.views.emailerList', name='emailerList'),
+    url(r'^(?P<game>[\w-]+)/emails/$', 'interface.views.emailList', name='emailList'),
+    url(r'^(?P<game>[\w-]+)/$', 'interface.views.overview', name='teamList'),
+    url(r'^(?P<game>[\w-]+)/standings/$', 'interface.views.standings', name='teamList'),
 
     url(r'^help/$', direct_to_template, {'template': 'help.html'}),
 
-    url(r'^edit/?$', 'interface.views.editTeam', name='editTeam'),
-    url(r'^remove/?(?P<id>[a-z\d]+)/$', 'interface.views.removePlayer'),
-    url(r'^add/?(?P<id>[a-z\d]+)/$', 'interface.views.addPlayer'),
+    url(r'^(?P<game>[\w-]+)/edit/?$', 'interface.views.editTeam', name='editTeam'),
+    url(r'^(?P<game>[\w-]+)/remove/?(?P<id>[a-z\d]+)/$', 'interface.views.removePlayer'),
+    url(r'^(?P<game>[\w-]+)/add/?(?P<id>[a-z\d]+)/$', 'interface.views.addPlayer'),
 
     (r'^accounts/profile/.*', 'interface.views.home'),
     (r'^users/.*', 'interface.views.home'),

@@ -8,55 +8,39 @@
 
 <body>
   <div class="navbar ">
-      <div class="navbar-inner">
-            <div class="container">
-              <a class="brand" href="/">
-                <img src="{{STATIC_URL}}img/fantasyemail.gif" alt="RiskyListy" />
-                 </a>
-		<div class="pull-left"><p style="font-size: 200%; padding-top: 40px; font-style: italic">"Turn any email list into a fantasy sports game"</p>
-</p></div>
-             <ul class="nav pull-right">
-               {%if not user.is_authenticated %}
-               <li> <a href="/accounts/login/">Login </a></li>
-               <li> <a href="/accounts/register/">Register </a></li>
-               {% else %} 
-               <li> <a href="/overview">Overview</a></li>
-               <li> <a href="/standings">Standings</a></li>
-               <li> <a href="/edit">Your Team </a></li>
-               <li> <a href="/emailers">All Emailers</a></li>
-               <li> <a href="/emails">All Emails</a></li>
-               {% endif %}
-               <li> <a href="/help/">Rules/Help </a></li>
-             <ul>
-                   
-            </div>
-        </div>
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="/"><img src="{{STATIC_URL}}img/fantasyemail.gif" alt="RiskyListy" /></a>
+        <div class="pull-left"><p style="font-size: 200%; padding-top: 40px; font-style: italic">"Turn any email list into a fantasy sports game"</p></div>
+        <ul class="nav pull-right">
+          {%if not user.is_authenticated %}
+            <li><a href="accounts/login/">Login</a></li>
+            {#<li> <a href="/accounts/register/">Register</a></li>#}
+          {% elif game %} 
+            <li><a href="/{{game}}">Overview</a></li>
+            <li><a href="/{{game}}/standings">Standings</a></li>
+            <li><a href="/{{game}}/edit">Your Team </a></li>
+            <li><a href="/{{game}}/emailers">All Emailers</a></li>
+            <li><a href="/{{game}}/emails">All Emails</a></li>
+            <li><a href="/accounts/logout">Log Out</a></li>
+          {% endif %}
+          <li><a href="/help/">Rules/Help</a></li>
+        <ul>
+      </div>
+    </div>
   </div>
   <br>
   <div class="container">
     {% block content %}
-    {%endblock %}
-  </div> {#end container #}
-
-  <div style="text-align: center; margin-top: 20px; color: #999; font-style: italic">
+    {% endblock %}
   </div>
 
-<script type="text/javascript">
+  {% block analytics %}
+  {% endblock analytics %}
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-30195395-1']);
-  _gaq.push(['_setDomainName', 'boxysean.com']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
-
+  {% block jquery %}
   <script src="{{STATIC_URL}}js/jquery.min.js"></script>
+  {% endblock jquery %}
 
   {% block scripts %}
   {% endblock %}

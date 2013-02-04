@@ -22,21 +22,22 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
-config = yaml.load(file("game.yaml"))
+config = yaml.load(open("game.yaml"))
 
 tzDelta = timedelta(hours=config["timezone"])
 
 
 def home(request):
-    if request.user.is_authenticated() and len(Team.objects.filter(user=request.user)):
-        return HttpResponseRedirect('/edit')
     return render_to_response("home.html", locals() , context_instance=RequestContext(request))
 
-def getTeam(request, id):
-    team = get_object_or_404(Team, id=id)
-    return render_to_response("home.html", locals() , context_instance=RequestContext(request))
+def getTeam(request, game, id):
+    if request.user.is_authenticated():
+        team = get_object_or_404(Team, id=id)
+        return render_to_response("home.html", locals() , context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
 
-def editTeam(request):
+def editTeam(request, game):
     if request.user.is_authenticated():
         team = get_object_or_404(Team, user=request.user)
         categories = sorted(Category.objects.all(), key=lambda a: a.name)
@@ -48,11 +49,9 @@ def editTeam(request):
 
         return render_to_response("editTeam.html", locals() , context_instance=RequestContext(request))
     else:
-        headline= 'Error'
-        return render_to_response("error.html",locals() , context_instance=RequestContext(request))
-        # return HttpResponse('error yo')
+        return HttpResponseRedirect('/accounts/login/')
 
-def addPlayer(request, id):
+def addPlayer(request, game, id):
     if request.user.is_authenticated():
         team = get_object_or_404(Team, user=request.user)
         emailer_to_add = get_object_or_404(Emailer, id=id)
@@ -79,10 +78,9 @@ def addPlayer(request, id):
         new_player = Player.objects.create(team=team, emailer=emailer_to_add) # Points should be 0 when they're first added no matter what, right?
         return HttpResponseRedirect('/edit')
     else:
-        headline= "Error!"
-        return render_to_response("error.html",locals() , context_instance=RequestContext(request))
+        return HttpResponseRedirect('/accounts/login/')
 
-def removePlayer(request, id):
+def removePlayer(request, game, id):
     if request.user.is_authenticated():
         team = get_object_or_404(Team, user=request.user)
         team_players = get_list_or_404(Player, team=team )
@@ -96,76 +94,86 @@ def removePlayer(request, id):
             message="Think you're clever, trying to remove another manager's player? This has been logged"
             return render_to_response("error.html",locals() , context_instance=RequestContext(request))
     else:
-        return HttpResponse('error yo')
+        return HttpResponseRedirect('/accounts/login/')
 
-def overview(request):
-    team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
-    categories = sorted(Category.objects.all(), key=lambda a: a.name)
-    for team in team_list:
-        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
-        team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+def overview(request, game):
+    if request.user.is_authenticated():
+        team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
+        categories = sorted(Category.objects.all(), key=lambda a: a.name)
+        for team in team_list:
+            team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+            team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 
-    return render_to_response("overview.html", locals(), context_instance=RequestContext(request))
+        return render_to_response("overview.html", locals(), context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
 
-def standings(request):
-    team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
-    categories = sorted(Category.objects.all(), key=lambda a: a.name)
-    for team in team_list:
-        team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
-        if not team.teampoints_list:
-            team.teampoints_list = [{"points": 0}] * len(categories)
+def standings(request, game):
+    if request.user.is_authenticated():
+        team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
+        categories = sorted(Category.objects.all(), key=lambda a: a.name)
+        for team in team_list:
+            team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+            if not team.teampoints_list:
+                team.teampoints_list = [{"points": 0}] * len(categories)
 
-        team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
-        if not team.teamstats_list:
-            team.teamstats_list = [{"stat": 0}] * len(categories)
+            team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+            if not team.teamstats_list:
+                team.teamstats_list = [{"stat": 0}] * len(categories)
 
-    stats_no_sorter = len(categories) + 2
+        stats_no_sorter = len(categories) + 2
 
-    return render_to_response("standings.html", locals(), context_instance=RequestContext(request))
+        return render_to_response("standings.html", locals(), context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
 
-def emailerList(request):
-    categories = sorted(Category.objects.all(), key=lambda a: a.name)
-    emailers = Emailer.objects.all().order_by("name")
-    try:
-      user_team = Team.objects.filter(user=request.user)
-    except:
-      user_team = None
-    for emailer in emailers:
-        emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
-        print "len of stats_list", len(emailer.stats_list)
-        if not emailer.stats_list:
-            emailer.stats_list = [{"stat": 0}] * len(categories)
-            print emailer.stats_list
-        emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
-        player_set = emailer.player_set.all()
-        if len(player_set) == 1:
-            emailer.owned_by = player_set[0].team.name
-            emailer.owned_by_icon = player_set[0].team.icon
-            emailer.owns_player = user_team != None and len(user_team) > 0 and player_set[0].team.name == user_team[0].name
-        else:
-            emailer.owned_by = "Free Agent"
-
-    return render_to_response("emailerList.html", locals(), context_instance=RequestContext(request))
-
-def teamDetail(request, id):
-    team = get_object_or_404(Team, id=id)
-    categories = sorted(Category.objects.all(), key=lambda a: a.name)
-    teamemailers = team.player_set.all()
-    for emailer in teamemailers:
-        ### really bad hack :( ###
+def emailerList(request, game):
+    if request.user.is_authenticated():
+        categories = sorted(Category.objects.all(), key=lambda a: a.name)
+        emailers = Emailer.objects.all().order_by("name")
         try:
-            emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+          user_team = Team.objects.filter(user=request.user)
         except:
-            continue
-    teamstats = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
-#    teampoints = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
+          user_team = None
+        for emailer in emailers:
+            emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+            if not emailer.stats_list:
+                emailer.stats_list = [{"stat": 0}] * len(categories)
+            emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
+            player_set = emailer.player_set.all()
+            if len(player_set) == 1:
+                emailer.owned_by = player_set[0].team.name
+                emailer.owned_by_icon = player_set[0].team.icon
+                emailer.owns_player = user_team != None and len(user_team) > 0 and player_set[0].team.name == user_team[0].name
+            else:
+                emailer.owned_by = "Free Agent"
 
-    return render_to_response("teamDetail.html", locals(), context_instance=RequestContext(request))
+        return render_to_response("emailerList.html", locals(), context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
 
-def emailList(request):
-    email_list = Email.objects.all().order_by("timestamp").reverse()
-    for email in email_list:
-        email.isoformat = (email.timestamp + tzDelta).isoformat()
-#        print type(email.timestamp), email.timestamp
-    return render_to_response("emailList.html", locals(), context_instance=RequestContext(request))
+def teamDetail(request, game, id):
+    if request.user.is_authenticated():
+        team = get_object_or_404(Team, id=id)
+        categories = sorted(Category.objects.all(), key=lambda a: a.name)
+        teamemailers = team.player_set.all()
+        for emailer in teamemailers:
+            ### really bad hack :( ###
+            try:
+                emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+            except:
+                continue
+        teamstats = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
+        return render_to_response("teamDetail.html", locals(), context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
+
+def emailList(request, game):
+    if request.user.is_authenticated():
+        email_list = Email.objects.all().order_by("timestamp").reverse()
+        for email in email_list:
+            email.isoformat = (email.timestamp + tzDelta).isoformat()
+        return render_to_response("emailList.html", locals(), context_instance=RequestContext(request))
+    else:
+        return HttpResponseRedirect('/accounts/login/')
 
