@@ -15,6 +15,12 @@ emailerList = ListView.as_view(model=Emailer, template_name= "emailerList.html")
 # teamList = ListView.as_view(model=Team, template_name= "teamList.html")
 
 urlpatterns = patterns('',
+    # Uncomment the admin/doc line below to enable admin documentation:
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    # Uncomment the next line to enable the admin:
+    url(r'^admin/', include(admin.site.urls)),
+
     # Examples:
     url(r'^$', 'interface.views.home', name='home'),
     url(r'^(?P<game>[\w-]+)/team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
@@ -33,9 +39,4 @@ urlpatterns = patterns('',
     (r'^users/.*', 'interface.views.home'),
     (r'^accounts/', include('registration.urls')),
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
 )
