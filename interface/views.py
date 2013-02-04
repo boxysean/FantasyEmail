@@ -114,19 +114,6 @@ def standings(request):
         team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
         team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 
-    emailers = Emailer.objects.all().order_by("name")
-    user_team = Team.objects.filter(user=request.user)
-    for emailer in emailers:
-        emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
-        emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
-        player_set = emailer.player_set.all()
-        if len(player_set) == 1:
-            emailer.owned_by = player_set[0].team.name
-            emailer.owned_by_icon = player_set[0].team.icon
-            emailer.owns_player = len(user_team) > 0 and player_set[0].team.name == user_team[0].name
-        else:
-            emailer.owned_by = "Free Agent"
-
     return render_to_response("standings.html", locals(), context_instance=RequestContext(request))
 
 def emailerList(request):

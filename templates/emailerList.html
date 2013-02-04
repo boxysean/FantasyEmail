@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+
+{% block pagetitle %}
+ - All Emailers
+{% endblock pagetitle %}
+
 {%block content %}
   <h1>List of Emailers</h1>
 
@@ -23,7 +28,7 @@
       <td class="center">{{ stat.stat }}</td>
       {% endfor %}
       <td class="center">{{ emailer.stats_total }}</td>
-      <td>{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/{{ emailer.owned_by_icon }}" /> {% endif %}{{ emailer.owned_by }}</td>
+      <td>{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/team-logos/small/{{ emailer.owned_by_icon }}" /> {% endif %}{{ emailer.owned_by }}</td>
       {% if emailer.player_set.all|length == 0 %}
         <td><a class="btn btn-mini btn-success" href="/add/{{ emailer.id }}">Recruit this emailer</a></td>
       {% else %}
