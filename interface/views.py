@@ -44,6 +44,8 @@ def editTeam(request, game):
         teamemailers = team.player_set.all()
         for emailer in teamemailers:
             emailer.stats_list = sorted(emailer.emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+            if not emailer.stats_list:
+                emailer.stats_list = [{"stat": 0}] * len(categories)
         teamstats = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
         teampoints = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 
@@ -76,7 +78,7 @@ def addPlayer(request, game, id):
 
         new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = emailer_to_add, add=True ) # points should be what ??! 
         new_player = Player.objects.create(team=team, emailer=emailer_to_add) # Points should be 0 when they're first added no matter what, right?
-        return HttpResponseRedirect('/edit')
+        return HttpResponseRedirect('/%s/edit' % (game))
     else:
         return HttpResponseRedirect('/accounts/login/')
 
@@ -88,7 +90,7 @@ def removePlayer(request, game, id):
         new_transaction = PlayerTransaction.objects.create(timestamp= datetime.now(), team=team, emailer = player_to_remove.emailer, add=False ) # Points should be 0 here? 
         if player_to_remove in team_players:
             player_to_remove.delete()
-            return HttpResponseRedirect('/edit')
+            return HttpResponseRedirect('/%s/edit' % (game))
         else:
             headline= "Cheater!!!"
             message="Think you're clever, trying to remove another manager's player? This has been logged"

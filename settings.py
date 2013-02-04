@@ -3,9 +3,9 @@
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
-import os
-
 import os, re
+import yaml
+
 def here(*args): 
         return os.path.join(os.path.abspath(os.path.dirname(__file__)), *args)
 
@@ -17,7 +17,9 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-NUMBER_OF_SLOTS_ON_TEAM = 2
+config = yaml.load(open("game.yaml"))
+
+NUMBER_OF_SLOTS_ON_TEAM = config["activeSpots"]
 
 DATABASES = {
     'default': {
