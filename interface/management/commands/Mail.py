@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 
 from email.header import decode_header
+from email.utils import parsedate_tz, mktime_tz
 
 import os
 import sys
@@ -13,11 +14,8 @@ from interface.models import Emailer, EmailAddress, Email
 
 from django.core.exceptions import ObjectDoesNotExist
 
-def parseTimestamp(date):
-  timetuple = email.utils.parsedate_tz(date)
-  timestamp = time.mktime(timetuple[0:9]) - timetuple[9]
-  date = datetime.fromtimestamp(timestamp)
-  return date
+import pytz
+import yaml
 
 ### mailboxes ###
 
@@ -53,17 +51,24 @@ class UnixMailbox(Mailbox):
     mb = mailbox.UnixMailbox(file(mbFile, "r"), email.message_from_file)
     checked = set()
     count = 0
+
+    config = yaml.load(open("game.yaml"))
+    tz = pytz.timezone(config.get("timezone", "UTC"))
+
     for msg in mb:
       try:
         if not listAddrProg.search(msg["to"]):
           continue
   
-        timestamp = parseTimestamp(msg["date"])
-  
-        if startDate > timestamp or timestamp > endDate:
+        timetuple = parsedate_tz(msg["date"])
+        timestamp = mktime_tz(timetuple)
+        date = datetime.fromtimestamp(timestamp)
+        date = date.replace(tzinfo=tz)
+
+        if startDate > date or date > endDate:
           continue
-  
-        mail = Mail(msg)
+
+        mail = Mail(msg, date)
   
         self.msgs.append(mail)
 
@@ -90,7 +95,7 @@ class Mail:
   emailProg = re.compile("[\w\-\.]+@\w[\w\-]+\.+[\w\-]+", flags=re.IGNORECASE)
   getNameProg = re.compile("^\"?([^\"]*)\"?\\s+<(\\S+@\\S+)>")
 
-  def __init__(self, msg):
+  def __init__(self, msg, date=None):
     self.msg = msg
     self.subject, self.subject_encoding = decode_header(msg["subject"])[0]
 
@@ -114,15 +119,19 @@ class Mail:
       self.fromName = None 
       self.fromAddr = self.emailProg.search(msg["from"]).group(0)
 
-#    print "name %s addr %s" % (self.fromName, self.fromAddr)
-
-    self.initDate()
+    if date:
+      self.timestamp = float(date.strftime("%s.%f"))
+      self.datestr = date.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+      # omg deprecate this
+      self.initDate()
 
     self.toAddr = self.emailProg.search(msg["to"]).group(0)
 
     self.hasGif = None
     self.lines = None
 
+  # HACK, deprecate
   def initDate(self):
     timetuple = email.utils.parsedate_tz(self.msg["date"])
     self.timestamp = time.mktime(timetuple[0:9]) - timetuple[9]

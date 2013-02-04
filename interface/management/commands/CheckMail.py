@@ -15,6 +15,8 @@ from django.core.management.base import BaseCommand, CommandError, make_option
 
 from interface.models import *
 
+import pytz as tz
+
 class Command(BaseCommand):
   help = "whatever"
 
@@ -23,11 +25,19 @@ class Command(BaseCommand):
   
     mailboxes = Mailboxes()
   
-    config = yaml.load(file("game.yaml"))
+    config = yaml.load(open("game.yaml"))
 
     startDate = config.get("startDate", None)
     endDate = config.get("endDate", None)
+
+    timezone = tz.timezone(config.get("timezone", "UTC"))
+
+    if startDate:
+      startDate = timezone.localize(startDate)
   
+    if endDate:
+      endDate = timezone.localize(endDate)
+
     for mailboxDef in config["mailboxes"]:
       if mailboxDef["type"] == "UnixMailbox":
         mbFile = mailboxDef["file"]
