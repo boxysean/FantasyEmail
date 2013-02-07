@@ -26,7 +26,7 @@
       {% for stat in emailer.stats_list %}
       <td class="center">{{ stat.stat }}</td>
       {% endfor %}
-      <td><a class="btn btn-mini btn-danger" href="/{{game}}/remove/{{emailer.id}}">Cut this emailer</a></td>
+      <td><a class="btn btn-mini btn-danger" href="/{{game}}/remove/{{emailer.emailer.id}}">Cut this emailer</a></td>
     </tr>
     {% endfor %}
   </tbody>
