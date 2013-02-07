@@ -12,7 +12,7 @@
       <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
         <td class="center">{{ forloop.counter }}</td>
         <td><img src="{{ STATIC_URL }}/img/team-logos/big/{{ team.icon }}" /> <a href="/{{game}}/team/{{team.id}}">{{team.name}}</a></td>
-        <td class="center">{{team.getTotalPoints}}</td>
+        <td class="center">{{team.getTotalPoints|floatformat:1}}</td>
       </tr>
     {% endfor %}
     </tbody>

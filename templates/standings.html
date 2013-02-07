@@ -23,7 +23,7 @@
         {% for tscore in team.teampoints_list %}
           <td class="center">{{tscore.points}}</td>
         {% endfor %}
-        <td class="strong center"> {{team.getTotalPoints}}</td>
+        <td class="strong center"> {{team.getTotalPoints|floatformat:1}}</td>
       </tr>
     {% endfor %}
     </tbody>
