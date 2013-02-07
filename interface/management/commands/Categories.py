@@ -153,7 +153,7 @@ class NightOwlCategory(Category):
 
   def check(self, mail):
     date = datetime.fromtimestamp(mail.timestamp)
-    hour = (int(date.strftime("%H"))-4)%24 # omg so bad
+    hour = int(date.strftime("%H"))
 
     if 0 <= hour <= 7:
       self.award(mail, self, 1)

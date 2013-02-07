@@ -177,7 +177,7 @@ def emailList(request, game):
     if request.user.is_authenticated():
         email_list = Email.objects.all().order_by("timestamp").reverse()
         for email in email_list:
-            email.isoformat = (email.timestamp + tzDelta).isoformat()
+            email.isoformat = (email.timestamp).isoformat()
         return render_to_response("emailList.html", locals(), context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/accounts/login/')
