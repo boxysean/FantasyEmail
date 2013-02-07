@@ -33,7 +33,7 @@
       <td><a class="btn btn-mini btn-success" href="/{{game}}/add/{{ emailer.id }}">Recruit this emailer</a></td>
       {% else %}
         {% if emailer.owns_player %}
-        <td><a class="btn btn-mini btn-danger" href="/{{game}}/remove/{{ emailer.id }}">Cut this emailer</a></td>
+        <td><a class="btn btn-mini btn-danger" href="/{{game}}/remove/{{ emailer.player_id }}">Cut this emailer</a></td>
         {% else %}
           <td></td>
         {% endif %}

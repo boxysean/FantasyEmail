@@ -144,9 +144,11 @@ def emailerList(request, game):
             emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
             player_set = emailer.player_set.all()
             if len(player_set) == 1:
-                emailer.owned_by = player_set[0].team.name
-                emailer.owned_by_icon = player_set[0].team.icon
-                emailer.owns_player = user_team != None and len(user_team) > 0 and player_set[0].team.name == user_team[0].name
+                player = player_set[0]
+                emailer.owned_by = player.team.name
+                emailer.owned_by_icon = player.team.icon
+                emailer.owns_player = user_team != None and len(user_team) > 0 and player.team.name == user_team[0].name
+                emailer.player_id = player.id
             else:
                 emailer.owned_by = "Free Agent"
 
