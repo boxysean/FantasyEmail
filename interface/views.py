@@ -26,9 +26,6 @@ logger = logging.getLogger(__name__)
 
 config = yaml.load(open("game.yaml"))
 
-tzDelta = timedelta(hours=config["timezone"])
-
-
 def home(request):
     return render_to_response("home.html", locals() , context_instance=RequestContext(request))
 
@@ -182,3 +179,11 @@ def emailList(request, game):
     else:
         return HttpResponseRedirect('/accounts/login/')
 
+def transactionList(request, game):
+  if request.user.is_authenticated():
+    transactions = PlayerTransaction.objects.all().order_by("timestamp").reverse()
+    for transaction in transactions:
+      transaction.isoformat = (transaction.timestamp).isoformat()
+    return render_to_response("transactionList.html", locals(), context_instance=RequestContext(request))
+  else:
+    return HttpResponseRedirect('/accounts/login/')

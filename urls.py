@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     url(r'^(?P<game>[\w-]+)/team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
     url(r'^(?P<game>[\w-]+)/emailers/$', 'interface.views.emailerList', name='emailerList'),
     url(r'^(?P<game>[\w-]+)/emails/$', 'interface.views.emailList', name='emailList'),
+    url(r'^(?P<game>[\w-]+)/transactions/$', 'interface.views.transactionList', name='transactionList'),
     url(r'^(?P<game>[\w-]+)/$', 'interface.views.overview', name='teamList'),
     url(r'^(?P<game>[\w-]+)/standings/$', 'interface.views.standings', name='teamList'),
 
