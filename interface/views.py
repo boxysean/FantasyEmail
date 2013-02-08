@@ -178,6 +178,15 @@ def emailerList(request, game):
             else:
                 emailer.owned_by = "Free Agent"
 
+        rank = 0
+        lastTotal = -1
+
+        for idx, emailer in enumerate(sorted(emailers, key=lambda x: x.stats_total, reverse=True)):
+            if emailer.stats_total != lastTotal:
+                rank = idx
+                lastTotal = emailer.stats_total
+            emailer.rank = rank+1
+
         return render_to_response("emailerList.html", locals(), context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/accounts/login/')

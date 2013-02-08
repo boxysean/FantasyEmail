@@ -28,6 +28,7 @@
   <table id="myTable" class="tablesorter">
   <thead>
     <tr>
+      <th>Rank</th>
       <th>Name</th>
       {% for category in categories %}
       <th>{{ category.name }}</th>
@@ -40,7 +41,8 @@
   <tbody>
    {% for emailer in emailers %}
     <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
-      <td>{{emailer}}</td>
+      <td>{{ emailer.rank }}</td>
+      <td>{{ emailer }}</td>
       {% for stat in emailer.stats_list %}
       <td class="center">{{ stat }}</td>
       {% endfor %}
