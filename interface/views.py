@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.utils import simplejson
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import settings
 from models import *
 
@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 config = yaml.load(open("game.yaml"))
+
+
+def moduloDay(t):
+  return t - timedelta(hours=t.hour, minutes=t.minute, seconds=t.second, microseconds=t.microsecond)
+
 
 def home(request):
     return render_to_response("home.html", locals() , context_instance=RequestContext(request))
@@ -138,11 +143,32 @@ def emailerList(request, game):
         except:
           user_team = None
         for emailer in emailers:
-            emailer.stats_list = sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name) 
+            emailer.stats_list = map(lambda x : x.stat, sorted(emailer.emailerstats_set.all(), key=lambda a: a.category.name))
+
             if not emailer.stats_list:
-                emailer.stats_list = [{"stat": 0}] * len(categories)
-            emailer.stats_total = sum([x.stat for x in emailer.emailerstats_set.all()])
+                emailer.stats_list = [0] * len(categories)
+
+            period = request.GET.get("period", 0)
+
+            try:
+                period = int(period)
+            except:
+                period = 0
+
+            if period > 0:
+                # find out how the emailer has done over time
+                yesterday = moduloDay(datetime.now() - timedelta(days=period))
+                yesterdays_stats = map(lambda x : x.stat, sorted(emailer.emailerstatshistory_set.filter(timestamp=yesterday), key=lambda a: a.category.name))
+
+                if not yesterdays_stats:
+                    yesterdays_stats = [0] * len(categories)
+
+                emailer.stats_list = map(lambda x : x[0] - x[1], zip(emailer.stats_list, yesterdays_stats))
+
+            emailer.stats_total = sum(emailer.stats_list)
+
             player_set = emailer.player_set.all()
+
             if len(player_set) == 1:
                 player = player_set[0]
                 emailer.owned_by = player.team.name

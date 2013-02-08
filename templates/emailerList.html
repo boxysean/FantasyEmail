@@ -4,9 +4,26 @@
  - All Emailers
 {% endblock pagetitle %}
 
-{%block content %}
+{% block content %}
   <h1>List of Emailers</h1>
 
+  <form action="{{ request.get_full_path }}" method="get">
+    <label for="name">Time period:</label>
+    <select name="period">
+      <option value="0" {% if period <= 0 %}selected{% endif %}>Overall</option>
+      <option value="1" {% if period == 1 %}selected{% endif %}>Today</option>
+      <option value="3" {% if period == 3 %}selected{% endif %}>Last 3 Days</option>
+      <option value="7" {% if period == 7 %}selected{% endif %}>This Week</option>
+    </select>
+
+    <input type="submit" value="Submit" />
+  </form>
+
+  {% if period <= 0 %}
+  <h2>Overall Stats</h2>
+  {% else %}
+  <h2>Stats over the last {{ period }} day{{ period|pluralize }}
+  {% endif %}
 
   <table id="myTable" class="tablesorter">
   <thead>
@@ -25,7 +42,7 @@
     <tr class="{% if forloop.counter|divisibleby:2 %}even{% else %}odd{% endif %}">
       <td>{{emailer}}</td>
       {% for stat in emailer.stats_list %}
-      <td class="center">{{ stat.stat }}</td>
+      <td class="center">{{ stat }}</td>
       {% endfor %}
       <td class="center">{{ emailer.stats_total }}</td>
       <td>{% if emailer.owned_by_icon %}<img src="{{STATIC_URL}}/img/team-logos/small/{{ emailer.owned_by_icon }}" /> {% endif %}{{ emailer.owned_by }}</td>

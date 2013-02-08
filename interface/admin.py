@@ -74,6 +74,16 @@ admin.site.register(models.EmailerStats, EmailerStatsAdmin)
 
 
 
+class EmailerStatsHistoryAdmin(admin.ModelAdmin):
+	list_display = ("timestamp", "emailer", "category", "stat")
+	list_filter = ("timestamp", "emailer", "category")
+	ordering = ("timestamp", "emailer", "category")
+	search = ("timestamp", "emailer", "category")
+
+admin.site.register(models.EmailerStatsHistory, EmailerStatsHistoryAdmin)
+
+
+
 class TeamPointsAdmin(admin.ModelAdmin):
 	list_display = ("team", "category", "points")
 	list_filter = ("team", "category")
