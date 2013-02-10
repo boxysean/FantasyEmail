@@ -4,6 +4,7 @@ from django.template import RequestContext
 from models import *
 from django.http import HttpResponse, HttpResponseRedirect
 from datetime import datetime, timedelta
+from django.db.models import Sum
 
 from django.views.generic import ListView, DetailView
 from django.core.urlresolvers import reverse
@@ -13,7 +14,8 @@ from django.utils import simplejson
 
 from datetime import datetime, timedelta
 import settings
-from models import *
+
+import time
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -114,6 +116,26 @@ def overview(request, game):
         return render_to_response("overview.html", locals(), context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/accounts/login/')
+
+def overviewGraph(request, game):
+  if request.user.is_authenticated():
+    res = {
+        "startTimestamp": int(time.mktime(config["startDate"].timetuple())),
+        "endTimestamp": int(time.mktime(config["endDate"].timetuple())),
+        "teams": []
+    }
+
+    for team in Team.objects.all():
+      values = []
+      res["teams"].append({ "key": team.name, "values": values })
+      total = 0
+      for stat in team.teamstatshistory_set.values("timestamp").order_by("timestamp").annotate(total=Sum("stat")):
+#        total += stat["total"]
+        values.append({ "x" : int(time.mktime(stat["timestamp"].timetuple()))*1000, "y" : stat["total"] })
+
+    return HttpResponse(simplejson.dumps(res), mimetype="application/json")
+  else:
+    return HttpResponseForbidden()
 
 def standings(request, game):
     if request.user.is_authenticated():

@@ -36,6 +36,8 @@ urlpatterns = patterns('',
     url(r'^(?P<game>[\w-]+)/remove/?(?P<id>[a-z\d]+)/$', 'interface.views.removePlayer'),
     url(r'^(?P<game>[\w-]+)/add/?(?P<id>[a-z\d]+)/$', 'interface.views.addPlayer'),
 
+    url(r'^(?P<game>[\w-]+)/overview/graph/$', 'interface.views.overviewGraph'),
+
     (r'^accounts/profile/.*', 'interface.views.home'),
     (r'^users/.*', 'interface.views.home'),
     (r'^accounts/', include('registration.urls')),
