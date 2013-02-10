@@ -34,7 +34,6 @@ class Command(BaseCommand):
         emailer.stats[category] = 0
         emailer.history[category] = {}
         historyDate = moduloDay(config["startDate"])
-        historyEndDate = moduloDay(config["endDate"])
         lastStat = 0
 
         for email in EmailPoint.objects.filter(awardTo=emailer, category=category).order_by("email__timestamp"):

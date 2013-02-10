@@ -94,6 +94,16 @@ admin.site.register(models.TeamPoints, TeamPointsAdmin)
 
 
 
+class TeamStatsHistoryAdmin(admin.ModelAdmin):
+	list_display = ("timestamp", "team", "category", "stat")
+	list_filter = ("timestamp", "team", "category")
+	ordering = ("timestamp", "team", "category")
+	search = ("timestamp", "team", "category")
+
+admin.site.register(models.TeamStatsHistory, TeamStatsHistoryAdmin)
+
+
+
 class TeamStatsAdmin(admin.ModelAdmin):
 	list_display = ("team", "category", "stat")
 	list_filter = ("team", "category")
@@ -101,6 +111,8 @@ class TeamStatsAdmin(admin.ModelAdmin):
 	search = ("team", "category")
 
 admin.site.register(models.TeamStats, TeamStatsAdmin)
+
+
 
 class EmailAdmin(admin.ModelAdmin):
 	list_display = ("timestamp", "emailer", "subject")

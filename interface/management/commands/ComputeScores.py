@@ -2,10 +2,11 @@ import re
 import yaml
 import sys
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from optparse import OptionParser
 import time
 import os
+from copy import deepcopy
 
 from django.conf import settings
 
@@ -14,6 +15,9 @@ from interface.models import *
 from django.core.management.base import BaseCommand, CommandError, make_option
 
 from django.core.exceptions import ObjectDoesNotExist
+
+def moduloDay(t):
+  return t - timedelta(hours=t.hour, minutes=t.minute, seconds=t.second, microseconds=t.microsecond)
 
 class Command(BaseCommand):
 
@@ -37,6 +41,7 @@ class Command(BaseCommand):
     ### fetch team transactions ###
     
     teams = list(Team.objects.all())
+    categories = list(Category.objects.all())
 
     for team in teams:
       team.stats = {}
@@ -47,6 +52,11 @@ class Command(BaseCommand):
       team.rank = {}
       team.done = {}
       team.transactions = list(team.playertransaction_set.all())
+      team.history = {}
+      for category in categories:
+        team.history[category] = {}
+
+      print team.history
       try:
         x = len(team.transactions)
         print team.transactions[0]
@@ -60,14 +70,23 @@ class Command(BaseCommand):
     startDate = config["startDate"]
     endDate = config["endDate"]
 
-    print EmailPoint.objects.all()
-    
+    historyDate = moduloDay(config["startDate"])
+    latestDate = moduloDay(EmailPoint.objects.all().order_by("-email__timestamp")[0].email.timestamp)
+
     for emailPoint in EmailPoint.objects.all():
       email = emailPoint.email
 
       if startDate > email.timestamp or email.timestamp > endDate:
         continue
-    
+
+      # make a historical note of each team
+      t = moduloDay(email.timestamp)
+      while historyDate < t:
+        for team in teams:
+          for category in categories:
+            team.history[category][historyDate] = team.stats.get(category, 0)
+        historyDate += timedelta(days=1)
+   
       print "[%s] %20s: %s" % (email.timestamp, email.emailer, email.subject)
     
       for team in teams:
@@ -77,28 +96,27 @@ class Command(BaseCommand):
           if team.name == options["follow_team_name"]:
             print "                                TT [team %20s] [emailer %20s] [add %s]" % (team.name[0:20], transaction.emailer.name[0:20], transaction.add)
 
-          # super hack for the screwed up DB i am working with
-          try:
-            team.roster[transaction.emailer] = transaction.add
-          except:
-            team.tidx = team.tidx+1
-            continue
+          team.roster[transaction.emailer] = transaction.add
           team.tidx = team.tidx+1
     
         category = emailPoint.category
     
         if team.roster.has_key(emailPoint.awardTo) and team.roster[emailPoint.awardTo]:
           points = emailPoint.points
-          if team.stats.has_key(category):
-            team.stats[category] = team.stats[category] + points
-          else:
-            team.stats[category] = points
+          team.stats[category] = team.stats.get(category, 0) + points
           if team.name == options["follow_team_name"] and points > 0:
             print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team.name[0:20], emailPoint.awardTo.name[0:20], emailPoint.category.name[0:20])
+
+    while historyDate <= latestDate:
+      for team in teams:
+        for category in categories:
+          team.history[category][historyDate] = team.stats.get(category, 0)
+      historyDate += timedelta(days=1)
+ 
     
     ### calculate points for each team ###
     
-    for category in Category.objects.all():
+    for category in categories:
       for team in teams:
         if not team.points.has_key(category):
           team.points[category] = 0
@@ -176,9 +194,20 @@ class Command(BaseCommand):
   
     TeamPoints.objects.all().delete()
     TeamStats.objects.all().delete()
+    TeamStatsHistory.objects.all().delete()
+
+    date = moduloDay(config["startDate"])
+    gameDates = []
+
+    while date <= latestDate:
+      gameDates.append(deepcopy(date))
+      date = date + timedelta(days=1)
     
     for team in s:
-      for category in Category.objects.all():
-        TeamPoints(team=team, category=category, points=team.points[category], total=0).save()
-        TeamStats(team=team, category=category, stat=team.stats[category], total=0).save()
+      for category in categories:
+        TeamPoints(team=team, category=category, points=team.points[category]).save()
+        TeamStats(team=team, category=category, stat=team.stats[category]).save()
+        for date in gameDates:
+          TeamStatsHistory(team=team, category=category, stat=team.history[category][date], timestamp=date).save()
+
 

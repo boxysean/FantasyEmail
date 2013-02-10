@@ -72,15 +72,20 @@ class TeamPoints(models.Model):
   team = models.ForeignKey(Team)
   category = models.ForeignKey(Category)
   points = models.DecimalField(max_digits=5, decimal_places=2)
-  total = models.BooleanField()
   def __str__(self): return "[%s] %s: %s" % (self.category, self.team, self.points)
 
 class TeamStats(models.Model):
   team = models.ForeignKey(Team)
   category = models.ForeignKey(Category)
   stat = models.IntegerField()
-  total = models.BooleanField()
   def __str__(self): return "[%s] %s: %s" % (self.category, self.team, self.stat)
+
+class TeamStatsHistory(models.Model):
+  team = models.ForeignKey(Team)
+  category = models.ForeignKey(Category)
+  stat = models.IntegerField()
+  timestamp = models.DateTimeField()
+  def __str__(self): return "[%s] %s: %s @ %s" % (self.category, self.team, self.stat, self.timestamp)
 
 class Email(models.Model):
   timestamp = models.DateTimeField()
