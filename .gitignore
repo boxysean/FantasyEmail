@@ -10,5 +10,4 @@ backend/mbox*
 
 bin/
 include/
-lib/
 local/
