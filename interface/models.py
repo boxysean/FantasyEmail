@@ -74,6 +74,13 @@ class TeamPoints(models.Model):
   points = models.DecimalField(max_digits=5, decimal_places=2)
   def __str__(self): return "[%s] %s: %s" % (self.category, self.team, self.points)
 
+class TeamPointsHistory(models.Model):
+  team = models.ForeignKey(Team)
+  category = models.ForeignKey(Category)
+  points = models.DecimalField(max_digits=5, decimal_places=2)
+  timestamp = models.DateTimeField()
+  def __str__(self): return "[%s] %s: %s @ %s" % (self.category, self.team, self.points, self.timestamp)
+
 class TeamStats(models.Model):
   team = models.ForeignKey(Team)
   category = models.ForeignKey(Category)

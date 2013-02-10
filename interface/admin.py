@@ -93,6 +93,15 @@ class TeamPointsAdmin(admin.ModelAdmin):
 admin.site.register(models.TeamPoints, TeamPointsAdmin)
 
 
+class TeamPointsHistoryAdmin(admin.ModelAdmin):
+	list_display = ("timestamp", "team", "category", "points")
+	list_filter = ("timestamp", "team", "category")
+	ordering = ("timestamp", "team", "category")
+	search = ("timestamp", "team", "category")
+
+admin.site.register(models.TeamPointsHistory, TeamPointsHistoryAdmin)
+
+
 
 class TeamStatsHistoryAdmin(admin.ModelAdmin):
 	list_display = ("timestamp", "team", "category", "stat")

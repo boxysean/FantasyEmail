@@ -35,93 +35,14 @@ class Command(BaseCommand):
         help="Follow a particular team and give information about it")
       )
 
-  def handle(self, *args, **options):
-    config = yaml.load(file("game.yaml"))
-    
-    ### fetch team transactions ###
-    
-    teams = list(Team.objects.all())
-    categories = list(Category.objects.all())
-
-    for team in teams:
-      team.stats = {}
-      team.points = {}
-      team.totalPoints = 0
-      team.tidx = 0
-      team.roster = {}
-      team.rank = {}
-      team.done = {}
-      team.transactions = list(team.playertransaction_set.all())
-      team.history = {}
-      for category in categories:
-        team.history[category] = {}
-
-      print team.history
-      try:
-        x = len(team.transactions)
-        print team.transactions[0]
-      except ObjectDoesNotExist:
-        team.transactions = []
-      except IndexError:
-        team.transactions = []
-
-    ### calculate points for each team ###
-    
-    startDate = config["startDate"]
-    endDate = config["endDate"]
-
-    historyDate = moduloDay(config["startDate"])
-    latestDate = moduloDay(EmailPoint.objects.all().order_by("-email__timestamp")[0].email.timestamp)
-
-    for emailPoint in EmailPoint.objects.all():
-      email = emailPoint.email
-
-      if startDate > email.timestamp or email.timestamp > endDate:
-        continue
-
-      # make a historical note of each team
-      t = moduloDay(email.timestamp)
-      while historyDate < t:
-        for team in teams:
-          for category in categories:
-            team.history[category][historyDate] = team.stats.get(category, 0)
-        historyDate += timedelta(days=1)
-   
-      print "[%s] %20s: %s" % (email.timestamp, email.emailer, email.subject)
-    
-      for team in teams:
-        print "TEAM %s" % team.name
-        while team.tidx < len(team.transactions) and team.transactions[team.tidx].timestamp < email.timestamp:
-          transaction = team.transactions[team.tidx]
-          if team.name == options["follow_team_name"]:
-            print "                                TT [team %20s] [emailer %20s] [add %s]" % (team.name[0:20], transaction.emailer.name[0:20], transaction.add)
-
-          team.roster[transaction.emailer] = transaction.add
-          team.tidx = team.tidx+1
-    
-        category = emailPoint.category
-    
-        if team.roster.has_key(emailPoint.awardTo) and team.roster[emailPoint.awardTo]:
-          points = emailPoint.points
-          team.stats[category] = team.stats.get(category, 0) + points
-          if team.name == options["follow_team_name"] and points > 0:
-            print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team.name[0:20], emailPoint.awardTo.name[0:20], emailPoint.category.name[0:20])
-
-    while historyDate <= latestDate:
-      for team in teams:
-        for category in categories:
-          team.history[category][historyDate] = team.stats.get(category, 0)
-      historyDate += timedelta(days=1)
- 
-    
-    ### calculate points for each team ###
-    
+  def calculatePoints(self, categories, teams):
     for category in categories:
       for team in teams:
         if not team.points.has_key(category):
           team.points[category] = 0
         if not team.stats.has_key(category):
           team.stats[category] = 0
+        team.done.clear()
     
       s = sorted(teams, key=lambda team: team.stats[category], reverse=False)
     
@@ -149,7 +70,95 @@ class Command(BaseCommand):
     
     for team in teams:
       team.totalPoints = sum(team.points[x] for x in team.points.keys())
-      
+ 
+  def handle(self, *args, **options):
+    config = yaml.load(file("game.yaml"))
+    
+    ### fetch team transactions ###
+    
+    teams = list(Team.objects.all())
+    categories = list(Category.objects.all())
+
+    for team in teams:
+      team.stats = {}
+      team.points = {}
+      team.totalPoints = 0
+      team.tidx = 0
+      team.roster = {}
+      team.rank = {}
+      team.done = {}
+      team.transactions = list(team.playertransaction_set.all())
+      team.statsHistory = {}
+      team.pointsHistory = {}
+      for category in categories:
+        team.statsHistory[category] = {}
+        team.pointsHistory[category] = {}
+      try:
+        x = len(team.transactions)
+      except ObjectDoesNotExist:
+        team.transactions = []
+      except IndexError:
+        team.transactions = []
+
+    ### calculate stats for each team ###
+    
+    startDate = config["startDate"]
+    endDate = config["endDate"]
+
+    historyDate = moduloDay(config["startDate"])
+    latestDate = moduloDay(EmailPoint.objects.all().order_by("-email__timestamp")[0].email.timestamp)
+
+    for emailPoint in EmailPoint.objects.all():
+      email = emailPoint.email
+
+      if startDate > email.timestamp or email.timestamp > endDate:
+        continue
+
+      # make a historical note of each team
+      t = moduloDay(email.timestamp)
+
+      if historyDate < t:
+        self.calculatePoints(categories, teams)
+
+      while historyDate < t:
+        for team in teams:
+          for category in categories:
+            team.pointsHistory[category][historyDate] = team.points.get(category, 0)
+            print team.name, category, team.points.get(category, 0)
+            team.statsHistory[category][historyDate] = team.stats.get(category, 0)
+        historyDate += timedelta(days=1)
+   
+#      print "[%s] %20s: %s" % (email.timestamp, email.emailer, email.subject)
+    
+      for team in teams:
+#        print "TEAM %s" % team.name
+        while team.tidx < len(team.transactions) and team.transactions[team.tidx].timestamp < email.timestamp:
+          transaction = team.transactions[team.tidx]
+          if team.name == options["follow_team_name"]:
+            print "                                TT [team %20s] [emailer %20s] [add %s]" % (team.name[0:20], transaction.emailer.name[0:20], transaction.add)
+
+          team.roster[transaction.emailer] = transaction.add
+          team.tidx = team.tidx+1
+    
+        category = emailPoint.category
+    
+        if team.roster.has_key(emailPoint.awardTo) and team.roster[emailPoint.awardTo]:
+          points = emailPoint.points
+          team.stats[category] = team.stats.get(category, 0) + points
+          if team.name == options["follow_team_name"] and points > 0:
+            print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team.name[0:20], emailPoint.awardTo.name[0:20], emailPoint.category.name[0:20])
+
+    ### calculate points for each team ###
+    
+    self.calculatePoints(categories, teams)
+
+    while historyDate <= latestDate:
+      for team in teams:
+        for category in categories:
+          team.pointsHistory[category][historyDate] = team.points.get(category, 0)
+          team.statsHistory[category][historyDate] = team.stats.get(category, 0)
+      historyDate += timedelta(days=1)
+    
     ### find the winner!!! ###
     
     s = sorted(teams, key=lambda team: team.name)
@@ -187,12 +196,12 @@ class Command(BaseCommand):
     
     ### put them in the database ###
     
-    print options
     if options["ignore"]:
       print "WARNING: not inserted into database"
       sys.exit(0)
   
     TeamPoints.objects.all().delete()
+    TeamPointsHistory.objects.all().delete()
     TeamStats.objects.all().delete()
     TeamStatsHistory.objects.all().delete()
 
@@ -208,6 +217,6 @@ class Command(BaseCommand):
         TeamPoints(team=team, category=category, points=team.points[category]).save()
         TeamStats(team=team, category=category, stat=team.stats[category]).save()
         for date in gameDates:
-          TeamStatsHistory(team=team, category=category, stat=team.history[category][date], timestamp=date).save()
-
+          TeamPointsHistory(team=team, category=category, points=team.pointsHistory[category][date], timestamp=date).save()
+          TeamStatsHistory(team=team, category=category, stat=team.statsHistory[category][date], timestamp=date).save()
 
