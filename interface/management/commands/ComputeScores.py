@@ -124,7 +124,6 @@ class Command(BaseCommand):
         for team in teams:
           for category in categories:
             team.pointsHistory[category][historyDate] = team.points.get(category, 0)
-            print team.name, category, team.points.get(category, 0)
             team.statsHistory[category][historyDate] = team.stats.get(category, 0)
         historyDate += timedelta(days=1)
    

@@ -132,8 +132,6 @@ def overviewGraph(request, game):
       for point in team.teampointshistory_set.values("timestamp").order_by("timestamp").annotate(total=Sum("points")):
         values.append({ "x" : int(time.mktime(point["timestamp"].timetuple()))*1000, "y" : float(point["total"]) })
 
-      print values
-
     return HttpResponse(simplejson.dumps(res), mimetype="application/json")
   else:
     return HttpResponseForbidden()
