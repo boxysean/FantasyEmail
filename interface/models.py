@@ -108,6 +108,16 @@ class EmailPoint(models.Model):
   awardTo = models.ForeignKey(Emailer)
   points = models.IntegerField()
 
+class TeamEmailerStatsHistory(models.Model):
+  team = models.ForeignKey(Team)
+  emailer = models.ForeignKey(Emailer)
+  category = models.ForeignKey(Category)
+  stat = models.IntegerField()
+  timestamp = models.DateTimeField()
+
+  def __str__(self):
+    return "[team %s emailer %s category %s stat %s time %s]" % (self.team, self.emailer, self.category, self.stat, self.timestamp)
+
 def createNewTeam(sender, created, instance=None, **kwargs):
     if instance is None:
         return

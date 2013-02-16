@@ -90,6 +90,7 @@ class Command(BaseCommand):
       team.transactions = list(team.playertransaction_set.all())
       team.statsHistory = {}
       team.pointsHistory = {}
+      team.emailerStatsHistory = {}
       for category in categories:
         team.statsHistory[category] = {}
         team.pointsHistory[category] = {}
@@ -144,6 +145,20 @@ class Command(BaseCommand):
         if team.roster.has_key(emailPoint.awardTo) and team.roster[emailPoint.awardTo]:
           points = emailPoint.points
           team.stats[category] = team.stats.get(category, 0) + points
+
+          emailer = emailPoint.awardTo
+
+          # also record as a stat for the team emailer stats history
+          if category not in team.emailerStatsHistory:
+            team.emailerStatsHistory[category] = {}
+
+          if historyDate not in team.emailerStatsHistory[category]:
+            team.emailerStatsHistory[category][historyDate] = {}
+
+          esh = team.emailerStatsHistory[category][historyDate].get(emailer, 0) + 1
+          team.emailerStatsHistory[category][historyDate][emailer] = esh
+
+          # and print it if we are debugging this!
           if team.name == options["follow_team_name"] and points > 0:
             print "                                 + [team %20s] [emailer %20s] [category %20s]" % (team.name[0:20], emailPoint.awardTo.name[0:20], emailPoint.category.name[0:20])
 
@@ -203,6 +218,7 @@ class Command(BaseCommand):
     TeamPointsHistory.objects.all().delete()
     TeamStats.objects.all().delete()
     TeamStatsHistory.objects.all().delete()
+    
 
     date = moduloDay(config["startDate"])
     gameDates = []
@@ -215,7 +231,13 @@ class Command(BaseCommand):
       for category in categories:
         TeamPoints(team=team, category=category, points=team.points[category]).save()
         TeamStats(team=team, category=category, stat=team.stats[category]).save()
+
+        # save the historical stats
         for date in gameDates:
           TeamPointsHistory(team=team, category=category, points=team.pointsHistory[category][date], timestamp=date).save()
           TeamStatsHistory(team=team, category=category, stat=team.statsHistory[category][date], timestamp=date).save()
+
+          # now the emailer history data too!
+          for emailer, stat in team.emailerStatsHistory.get(category, {}).get(date, {}).iteritems():
+            TeamEmailerStatsHistory(team=team, emailer=emailer, category=category, stat=stat, timestamp=date).save()
 

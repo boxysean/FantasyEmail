@@ -24,13 +24,14 @@ class Command(BaseCommand):
     ### calculate points for each emailer ###
     
     emailers = list(Emailer.objects.all())
+    categories = list(Category.objects.all())
 
     latestDate = moduloDay(EmailPoint.objects.all().order_by("-email__timestamp")[0].email.timestamp)
 
     for emailer in emailers:
       emailer.stats = {}
       emailer.history = {}
-      for category in Category.objects.all():
+      for category in categories:
         emailer.stats[category] = 0
         emailer.history[category] = {}
         historyDate = moduloDay(config["startDate"])
@@ -60,14 +61,14 @@ class Command(BaseCommand):
     
     sys.stdout.write("%30s " % "")
     
-    for category in Category.objects.all():
+    for category in categories:
       sys.stdout.write("%8s " % category.name[0:8])
     
     sys.stdout.write("\n")
     
     for ss in s:
       sys.stdout.write("%30s " % ss.name)
-      for category in Category.objects.all():
+      for category in categories:
         sys.stdout.write("%8d " % (ss.stats[category] if ss.stats.has_key(category) else 0))
       sys.stdout.write("\n")
     
@@ -84,7 +85,7 @@ class Command(BaseCommand):
       date = date + timedelta(days=1)
     
     for emailer in s:
-      for category in Category.objects.all():
+      for category in categories:
         EmailerStats(emailer=emailer, category=category, stat=emailer.stats[category]).save()
         for date in gameDates:
           EmailerStatsHistory(emailer=emailer, category=category, stat=emailer.history[category][date], timestamp=date).save()
