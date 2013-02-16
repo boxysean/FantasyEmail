@@ -28,14 +28,16 @@
       {% endfor %}
     </tr>
     {% endfor %}
-  </tbody>
     <tr>
       <td class="strong">Total</td>
       {% for stat in teamstats %}
       <td class="center strong">{{ stat.stat }}</td>
       {% endfor %}
     </tr>
+  </tbody>
   </table>
+
+  <div id="chart1"><svg></svg></div>
 
 {% endblock %}
 
@@ -44,6 +46,38 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ STATIC_URL }}/js/d3.min.js"></script>
+<script src="{{ STATIC_URL }}/js/nv.d3.min.js"></script>
+
+<script>
+  d3.json("/{{ game }}/team/{{ id }}/graph/", function(error, json) {
+    nv.addGraph(function() {
+      var chart = nv.models.multiBarChart()
+                .color(d3.scale.category10().range())
+                .stacked(true);
+
+      chart.xAxis.tickFormat(function(d) {
+        return d3.time.format('%x')(new Date(d));
+      });
+
+      chart.yAxis.tickFormat(d3.format(',f'));
+
+      var svg = d3.select('#chart1 svg')
+                  .style("width", 640)
+                  .style("height", 480)
+                  .datum(json);
+
+      svg.transition().duration(500).call(chart);
+
+      nv.utils.windowResize(chart.update);
+
+      return chart;
+    })
+  });
+
+
+
+</script>
 <script src="{{STATIC_URL}}tablesorter/jquery.tablesorter.min.js"></script>
 <script>
   jQuery(document).ready(function() {

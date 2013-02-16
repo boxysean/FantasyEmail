@@ -218,7 +218,7 @@ class Command(BaseCommand):
     TeamPointsHistory.objects.all().delete()
     TeamStats.objects.all().delete()
     TeamStatsHistory.objects.all().delete()
-    
+    TeamEmailerStatsHistory.objects.all().delete()
 
     date = moduloDay(config["startDate"])
     gameDates = []
@@ -238,6 +238,10 @@ class Command(BaseCommand):
           TeamStatsHistory(team=team, category=category, stat=team.statsHistory[category][date], timestamp=date).save()
 
           # now the emailer history data too!
-          for emailer, stat in team.emailerStatsHistory.get(category, {}).get(date, {}).iteritems():
-            TeamEmailerStatsHistory(team=team, emailer=emailer, category=category, stat=stat, timestamp=date).save()
+          for emailer in team.roster.keys():
+            if category not in team.emailerStatsHistory or date not in team.emailerStatsHistory[category] or emailer not in team.emailerStatsHistory[category][date]:
+              TeamEmailerStatsHistory(team=team, emailer=emailer, category=category, stat=0, timestamp=date).save()
+            else:
+              stat = team.emailerStatsHistory[category][date][emailer]
+              TeamEmailerStatsHistory(team=team, emailer=emailer, category=category, stat=stat, timestamp=date).save()
 

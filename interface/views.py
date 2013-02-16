@@ -136,6 +136,22 @@ def overviewGraph(request, game):
   else:
     return HttpResponseForbidden()
 
+def teamDetailGraph(request, game, id):
+  if request.user.is_authenticated():
+    team = get_object_or_404(Team, id=id)
+    res = []
+
+    for emailer in team.teamemailerstatshistory_set.values("emailer", "emailer__name").order_by("emailer__name").distinct():
+      values = []
+      for dp in team.teamemailerstatshistory_set.filter(emailer=emailer["emailer"]).values("timestamp").annotate(total=Sum("stat")).order_by("timestamp"):
+        print "emailer %s produced %d points on %s" % (emailer["emailer__name"], dp["total"], dp["timestamp"])
+        values.append({ "x": int(time.mktime(dp["timestamp"].timetuple())) * 1000, "y": dp["total"] })
+      res.append({ "key": emailer["emailer__name"], "values": values })
+
+    return HttpResponse(simplejson.dumps(res), mimetype="application/json")
+  else:
+    return HttpResponseForbidden()
+
 def standings(request, game):
     if request.user.is_authenticated():
         team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
