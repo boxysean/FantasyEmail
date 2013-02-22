@@ -37,6 +37,7 @@ urlpatterns = patterns('',
     url(r'^(?P<game>[\w-]+)/add/?(?P<id>[a-z\d]+)/$', 'interface.views.addPlayer'),
 
     url(r'^(?P<game>[\w-]+)/overview/graph/$', 'interface.views.overviewGraph'),
+    url(r'^(?P<game>[\w-]+)/overview/points/$', 'interface.views.overviewPointGraph'),
     url(r'^(?P<game>[\w-]+)/team/(?P<id>[a-z\d]+)/graph/$', "interface.views.teamDetailGraph", name='teamDetailGraph'),
 
     (r'^accounts/profile/.*', 'interface.views.home'),

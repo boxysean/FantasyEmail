@@ -125,12 +125,28 @@ def overviewGraph(request, game):
         "teams": []
     }
 
-    for team in Team.objects.all():
+    for team in Team.objects.all().order_by("name"):
       values = []
       res["teams"].append({ "key": team.name, "values": values })
       total = 0
       for point in team.teampointshistory_set.values("timestamp").order_by("timestamp").annotate(total=Sum("points")):
         values.append({ "x" : int(time.mktime(point["timestamp"].timetuple()))*1000, "y" : float(point["total"]) })
+
+    return HttpResponse(simplejson.dumps(res), mimetype="application/json")
+  else:
+    return HttpResponseForbidden()
+
+def overviewPointGraph(request, game):
+  if request.user.is_authenticated():
+    res = []
+
+    for team in Team.objects.all().order_by("name"):
+      values = []
+      lastValue = 0
+      for dp in team.teamstatshistory_set.filter(team=team).values("timestamp").annotate(total=Sum("stat")).order_by("timestamp"):
+        values.append({ "x": int(time.mktime(dp["timestamp"].timetuple())) * 1000, "y": dp["total"]-lastValue })
+        lastValue = dp["total"]
+      res.append({ "key": team.name, "values": values })
 
     return HttpResponse(simplejson.dumps(res), mimetype="application/json")
   else:
@@ -144,7 +160,6 @@ def teamDetailGraph(request, game, id):
     for emailer in team.teamemailerstatshistory_set.values("emailer", "emailer__name").order_by("emailer__name").distinct():
       values = []
       for dp in team.teamemailerstatshistory_set.filter(emailer=emailer["emailer"]).values("timestamp").annotate(total=Sum("stat")).order_by("timestamp"):
-        print "emailer %s produced %d points on %s" % (emailer["emailer__name"], dp["total"], dp["timestamp"])
         values.append({ "x": int(time.mktime(dp["timestamp"].timetuple())) * 1000, "y": dp["total"] })
       res.append({ "key": emailer["emailer__name"], "values": values })
 
