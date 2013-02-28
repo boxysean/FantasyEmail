@@ -49,3 +49,12 @@
 .bigger td, .bigger th {
   line-height: 48px !important;
 }
+
+.background {
+  position: fixed;
+  left: 0em;
+  top: 0em;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+}

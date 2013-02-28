@@ -31,6 +31,15 @@
   </div>
 {%endblock%}
 
+{% block canvas %}
+{% if gameComplete %}
+<div id="background" class="noselect">
+  <canvas></canvas>
+  <center><h1>{{ winner.name }} wins!!!!</h1></center>
+</div>
+{% endif %}
+{% endblock canvas %}
+
 {% block styles %}
   <link rel="stylesheet" href="{{STATIC_URL}}tablesorter/themes/blue/style.css" media="screen" />
   <link rel="stylesheet" href="{{STATIC_URL}}/css/nv.d3.css" media="screen" />
@@ -102,5 +111,11 @@ d3.json("/{{ game }}/overview/points/", function(error, json) {
 
 </script>
 
+{% endblock %}
+
+{% block victory %}
+{% if gameComplete %}
+<script src="{{STATIC_URL}}js/confetti.min.js"></script>
+{% endif %}
 {% endblock %}
 

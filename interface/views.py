@@ -12,7 +12,6 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.utils import simplejson
 
-from datetime import datetime, timedelta
 import settings
 
 import time
@@ -107,9 +106,15 @@ def removePlayer(request, game, id):
 
 def overview(request, game):
     if request.user.is_authenticated():
+        endTimestamp = int(time.mktime(config["endDate"].timetuple()))
+        nowTimestamp = int(time.mktime(datetime.now().timetuple()))
+        gameComplete = nowTimestamp >= endTimestamp
         team_list = sorted(Team.objects.all(), key= lambda a: -a.getTotalPoints())
         categories = sorted(Category.objects.all(), key=lambda a: a.name)
+        winner = None
         for team in team_list:
+            if not winner:
+                winner = team
             team.teamstats_list = sorted(team.teamstats_set.all(), key=lambda a: a.category.name)
             team.teampoints_list = sorted(team.teampoints_set.all(), key=lambda a: a.category.name)
 

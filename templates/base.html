@@ -7,6 +7,9 @@
 </head>
 
 <body>
+  {% block canvas %}
+  {% endblock %}
+
   <div class="navbar ">
     <div class="navbar-inner">
       <div class="container">
@@ -31,6 +34,8 @@
     </div>
   </div>
   <br>
+
+
   <div class="container">
     {% block content %}
     {% endblock %}
@@ -51,9 +56,12 @@
   <!-- End Piwik Tracking Code -->
   {% endblock analytics %}
 
-  {% block jquery %}
+ {% block jquery %}
   <script src="{{STATIC_URL}}js/jquery.min.js"></script>
   {% endblock jquery %}
+
+  {% block victory %}
+  {% endblock victory %}
 
   {% block scripts %}
   {% endblock %}
