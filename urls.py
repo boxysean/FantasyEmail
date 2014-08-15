@@ -22,6 +22,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     # Examples:
+    url(r'^help/$', direct_to_template, {'template': 'help.html'}),
+
     url(r'^$', 'interface.views.home', name='home'),
     url(r'^(?P<game>[\w-]+)/team/(?P<id>[a-z\d]+)/$', "interface.views.teamDetail", name='teamDetail'),
     url(r'^(?P<game>[\w-]+)/emailers/$', 'interface.views.emailerList', name='emailerList'),
@@ -29,8 +31,6 @@ urlpatterns = patterns('',
     url(r'^(?P<game>[\w-]+)/transactions/$', 'interface.views.transactionList', name='transactionList'),
     url(r'^(?P<game>[\w-]+)/$', 'interface.views.overview', name='teamList'),
     url(r'^(?P<game>[\w-]+)/standings/$', 'interface.views.standings', name='teamList'),
-
-    url(r'^help/$', direct_to_template, {'template': 'help.html'}),
 
     url(r'^(?P<game>[\w-]+)/edit/?$', 'interface.views.editTeam', name='editTeam'),
     url(r'^(?P<game>[\w-]+)/remove/?(?P<id>[a-z\d]+)/$', 'interface.views.removePlayer'),
